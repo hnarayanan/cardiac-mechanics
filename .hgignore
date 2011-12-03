@@ -1,0 +1,9 @@
+syntax:glob
+*~
+.DS_Store
+*.orig
+output/*.pvd
+output/*.vtu
+
+syntax: regexp
+.*\#.*\#$
