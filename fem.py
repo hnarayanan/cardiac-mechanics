@@ -69,61 +69,41 @@ Q = FunctionSpace(mesh, "Lagrange", 1)
 du = TrialFunction(V)            # Incremental displacement
 v  = TestFunction(V)             # Test function
 u  = Function(V)                 # Displacement from previous iteration
-#B  = Constant((0.0, 0.0, 0.0))  # Body force per unit volume
-#T  = Constant((0.1, 0.0, 0.0))  # Traction force on the boundary
 
 # Boundary conditions
-left_condition   = "x[0] == 0.0 && on_boundary"
-right_condition  = "x[0] == %g && on_boundary" % width
-back_condition   = "x[1] == 0.0 && on_boundary"
-front_condition  = "x[1] == %g && on_boundary" % depth
+back_condition   = "x[0] == 0.0 && on_boundary"
+front_condition  = "x[0] == %g && on_boundary" % depth
+left_condition   = "x[1] == 0.0 && on_boundary"
+right_condition  = "x[1] == %g && on_boundary" % width
 bottom_condition = "x[2] == 0.0 && on_boundary"
 top_condition    = "x[2] == %g && on_boundary" % height
 
-left, right = compile_subdomains([left_condition, right_condition])
 back, front = compile_subdomains([back_condition, front_condition])
+left, right = compile_subdomains([left_condition, right_condition])
 bottom, top = compile_subdomains([bottom_condition, top_condition])
 
+hold = Expression(("0.0", "0.0", "0.0"))
+shear = Expression(("0.0", "gamma*depth", "0.0"), gamma=0.0, depth=depth)
 
-hold = Expression(("0.0"))
-pull = Expression(("strain*height"), height=height, strain=0.0)
-
-hold_left   = DirichletBC(V.sub(0), hold, left)
-hold_back   = DirichletBC(V.sub(1), hold, back)
-hold_bottom = DirichletBC(V.sub(2), hold, bottom)
-#pull_right    = DirichletBC(V.sub(0), pull, right)
-#pull_front    = DirichletBC(V.sub(1), pull, front)
-pull_top    = DirichletBC(V.sub(2), pull, top)
-
-
-bcs = [hold_bottom, pull_top, hold_left, hold_back]
+hold_back = DirichletBC(V, hold, back)
+shear_front = DirichletBC(V, shear, front)
+bcs = [hold_back, shear_front]
 
 F = inner(P(u), grad(v))*dx
 J = derivative(F, u, du)
 
 displacement_file = File("output/displacement.pvd")
 stress_file = File("output/stress.pvd")
-applied_strain = 0.0
+applied_gamma = 0.0
 
-while applied_strain <= 2.0:
-    pull.strain = applied_strain
+while applied_gamma <= 0.51:
+    shear.gamma = applied_gamma
     solve(F == 0, u, bcs, J=J,
           form_compiler_parameters=ffc_options)
-    applied_strain = applied_strain + 0.01
+    applied_gamma = applied_gamma + 0.01
     displacement_file << u
-    stress = project(P(u)[2][2], Q)
-#    stress = project(sigma(u)[0][0], Q)
+    stress = project(sigma(u)[0][1], Q)
 #    stress = project(sigma(u)[1][1], Q)
 #    center = (width/2.0, depth/2.0, height/2.0)
 #    print applied_strain
     stress_file << stress
-
-
-
-
-#    plot(u, mode = "displacement")
-# Plot and hold solution
-#plot(u, mode = "displacement")
-
-#interactive()
-
