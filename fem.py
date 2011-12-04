@@ -105,10 +105,16 @@ hold = Expression(("0.0", "0.0", "0.0"))
 # bcs = [hold_left, shear_right]
 
 # sn
-shear = Expression(("0.0", "0.0", "gamma*width"), gamma=0.0, width=width)
-hold_left = DirichletBC(V, hold, left)
-shear_right = DirichletBC(V, shear, right)
-bcs = [hold_left, shear_right]
+# shear = Expression(("0.0", "0.0", "gamma*width"), gamma=0.0, width=width)
+# hold_left = DirichletBC(V, hold, left)
+# shear_right = DirichletBC(V, shear, right)
+# bcs = [hold_left, shear_right]
+
+# nf
+shear = Expression(("gamma*height", "0.0", "0.0"), gamma=0.0, height=height)
+hold_bottom = DirichletBC(V, hold, bottom)
+shear_top = DirichletBC(V, shear, top)
+bcs = [hold_bottom, shear_top]
 
 F = inner(P(u), grad(v))*dx
 J = derivative(F, u, du)
@@ -126,6 +132,7 @@ while applied_gamma <= 0.50:
     # stress = project(sigma(u)[0][1], Q) #fs
     # stress = project(sigma(u)[0][2], Q) #fn
     # stress = project(sigma(u)[1][0], Q) #sf
-    stress = project(sigma(u)[1][2], Q) #sn
+    # stress = project(sigma(u)[1][2], Q) #sn
+    stress = project(sigma(u)[2][0], Q) #nf
     print "stress-strain:", applied_gamma, max(stress.vector().array())
     stress_file << stress
