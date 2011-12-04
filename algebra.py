@@ -23,9 +23,9 @@ def sigma(F):
     C = F.T*F
 
     # Principle isotropic invariants
-    I1 = B.trace()
-    I2 = Rational(1, 2)*(I1*I1 - (B*B).trace())
-    I3 = B.det()
+    I1 = C.trace()
+    I2 = Rational(1, 2)*(I1*I1 - (C*C).trace())
+    I3 = C.det()
 
     # Reference fibre, sheet and sheet-normal directions
     f0 = Matrix([1, 0, 0])
@@ -47,7 +47,10 @@ def sigma(F):
         + a_fs*I8_fs*exp(b_fs*I8_fs**2)*(f*s.T + s*f.T)
 
     return(sigma)
-#    return(I3*sigma*F.inv().T)
+
+    # Returning the Piola-Kirchhoff tensor instead results
+    # in something strange
+    # return(I3*sigma*F.inv().T)
 
 # Identity Matrix
 I = Matrix([[1, 0, 0],
