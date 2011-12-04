@@ -15,7 +15,7 @@ a_s  =  2.481 #kPa
 b_s  = 11.120
 a_fs =  0.356 #kPa
 b_fs = 11.436
-p    =  a     #kPa
+p    =  0     #kPa
 
 def sigma(F):
     # Cauchy-Green tensors
