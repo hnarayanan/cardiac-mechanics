@@ -85,11 +85,18 @@ left, right = compile_subdomains([left_condition, right_condition])
 bottom, top = compile_subdomains([bottom_condition, top_condition])
 
 hold = Expression(("0.0", "0.0", "0.0"))
-shear = Expression(("0.0", "gamma*depth", "0.0"), gamma=0.0, depth=depth)
 
-hold_back = DirichletBC(V, hold, back)
-shear_front = DirichletBC(V, shear, front)
-bcs = [hold_back, shear_front]
+# fs
+# shear = Expression(("0.0", "gamma*depth", "0.0"), gamma=0.0, depth=depth)
+# hold_back = DirichletBC(V, hold, back)
+# shear_front = DirichletBC(V, shear, front)
+# bcs = [hold_back, shear_front]
+
+# sf
+shear = Expression(("gamma*width", "0.0", "0.0"), gamma=0.0, width=width)
+hold_left = DirichletBC(V, hold, left)
+shear_right = DirichletBC(V, shear, right)
+bcs = [hold_left, shear_right]
 
 F = inner(P(u), grad(v))*dx
 J = derivative(F, u, du)
@@ -104,7 +111,8 @@ while applied_gamma <= 0.50:
           form_compiler_parameters=ffc_options)
     applied_gamma = applied_gamma + 0.01
     displacement_file << u
-    stress = project(sigma(u)[0][1], Q)
+    #stress = project(sigma(u)[0][1], Q) #fs
+    stress = project(sigma(u)[1][0], Q) #sf
     print "stress-strain:", applied_gamma, max(stress.vector().array())
 #    center = (width/2.0, depth/2.0, height/2.0)
     stress_file << stress
