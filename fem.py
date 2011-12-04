@@ -58,6 +58,11 @@ def sigma(u):
            + 2*a_s*(I4_s - 1)*exp(b_s*(I4_s - 1)**2)*outer(s, s) \
            + a_fs*I8_fs*exp(b_fs*I8_fs**2)*(outer(f, s) + outer(s, f)))
 
+def P(u):
+    I = Identity(u.cell().d)
+    F = I + grad(u)
+    return(det(F)*sigma(u)*inv(F).T)
+
 # Function spaces
 V = VectorFunctionSpace(mesh, "Lagrange", 1)
 Q = FunctionSpace(mesh, "Lagrange", 1)
@@ -93,7 +98,7 @@ pull_top    = DirichletBC(V.sub(2), pull, top)
 
 bcs = [hold_bottom, pull_top, hold_left, hold_back]
 
-F = inner(sigma(u), grad(v))*dx
+F = inner(P(u), grad(v))*dx
 J = derivative(F, u, du)
 
 displacement_file = File("output/displacement.pvd")
@@ -106,7 +111,7 @@ while applied_strain <= 2.0:
           form_compiler_parameters=ffc_options)
     applied_strain = applied_strain + 0.01
     displacement_file << u
-    stress = project(sigma(u)[2][2], Q)
+    stress = project(P(u)[2][2], Q)
 #    stress = project(sigma(u)[0][0], Q)
 #    stress = project(sigma(u)[1][1], Q)
 #    center = (width/2.0, depth/2.0, height/2.0)
