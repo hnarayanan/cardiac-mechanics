@@ -2,6 +2,8 @@
 
 # Library imports and settings
 from dolfin import *
+from numpy import array
+
 parameters["form_compiler"]["cpp_optimize"] = True
 ffc_options = {"optimize": True, \
                "eliminate_zeros": True, \
@@ -96,12 +98,13 @@ displacement_file = File("output/displacement.pvd")
 stress_file = File("output/stress.pvd")
 applied_gamma = 0.0
 
-while applied_gamma <= 0.51:
+while applied_gamma <= 0.50:
     shear.gamma = applied_gamma
     solve(F == 0, u, bcs, J=J,
           form_compiler_parameters=ffc_options)
     applied_gamma = applied_gamma + 0.01
     displacement_file << u
     stress = project(sigma(u)[0][1], Q)
+    print "stress-strain:", applied_gamma, max(stress.vector().array())
 #    center = (width/2.0, depth/2.0, height/2.0)
     stress_file << stress
