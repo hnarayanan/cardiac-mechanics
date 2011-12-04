@@ -1,0 +1,1 @@
+egrep -o '<DataArray  type="Float32"  Name="u"  format="ascii">.{12}' stress* | sed -e 's/stress000....vtu:<DataArray  type="Float32"  Name="u"  format="ascii">//g'
