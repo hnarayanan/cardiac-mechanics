@@ -25,7 +25,7 @@ a_s  = Constant(2.481)  #kPa
 b_s  = Constant(11.120)
 a_fs = Constant(0.216)  #kPa
 b_fs = Constant(11.436)
-p    = Constant(0.059)    #kPa
+p    = Constant(0.059)  #kPa
 
 # Reference fibre, sheet and sheet-normal directions
 f0 = Constant((1, 0, 0))
