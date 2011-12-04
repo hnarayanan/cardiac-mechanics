@@ -17,15 +17,15 @@ mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
 
 # Material parameters
 # Figure 7
-a    =  0.059 #kPa
-b    =  8.023
-a_f  = 18.472 #kPa
-b_f  = 16.026
-a_s  =  2.481 #kPa
-b_s  = 11.120
-a_fs =  0.216 #kPa
-b_fs = 11.436
-p    =  a     #kPa
+a    = Constant(0.059)  #kPa
+b    = Constant(8.023)
+a_f  = Constant(18.472) #kPa
+b_f  = Constant(16.026)
+a_s  = Constant(2.481)  #kPa
+b_s  = Constant(11.120)
+a_fs = Constant(0.216)  #kPa
+b_fs = Constant(11.436)
+p    = Constant(0.059)    #kPa
 
 # Reference fibre, sheet and sheet-normal directions
 f0 = Constant((1, 0, 0))
@@ -103,7 +103,5 @@ while applied_gamma <= 0.51:
     applied_gamma = applied_gamma + 0.01
     displacement_file << u
     stress = project(sigma(u)[0][1], Q)
-#    stress = project(sigma(u)[1][1], Q)
 #    center = (width/2.0, depth/2.0, height/2.0)
-#    print applied_strain
     stress_file << stress
