@@ -7,13 +7,13 @@ I, B, C, gamma, f0, s0, n0 = symbols("I, B, C, gamma, f0, s0, n0")
 sigma, p = symbols("sigma, p")
 
 # Material parameters for Figure 7
-a    =  0.059 #kPa
+a    =  0.500 #kPa
 b    =  8.023
 a_f  = 18.472 #kPa
 b_f  = 16.026
 a_s  =  2.481 #kPa
 b_s  = 11.120
-a_fs =  0.216 #kPa
+a_fs =  0.356 #kPa
 b_fs = 11.436
 p    =  a     #kPa
 
@@ -104,7 +104,7 @@ plt.plot(gammas, sigma_sf_plot, label='sf')
 plt.plot(gammas, sigma_sn_plot, label='sn')
 plt.plot(gammas, sigma_nf_plot, label='nf')
 plt.plot(gammas, sigma_ns_plot, label='ns')
-plt.legend(loc=(0.75, 0.6))
+plt.legend(loc=(0.75, 0.59))
 plt.xlabel("Amount of shear")
 plt.ylabel("Shear stress (kPa)")
 plt.show()
