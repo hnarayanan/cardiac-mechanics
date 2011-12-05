@@ -14,8 +14,10 @@ ffc_options = {"optimize": True, \
 width = 1
 depth = 10
 height = 1
-n = 5
-mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
+n = 4
+mesh = Box(0, depth, 0, width, 0, height, n*width, n*depth, n*height) #Might be a bug
+plot(mesh)
+interactive()
 
 # Material parameters
 # Figure 7
@@ -89,26 +91,22 @@ left, right = compile_subdomains([left_condition, right_condition])
 bottom, top = compile_subdomains([bottom_condition, top_condition])
 
 hold = Expression(("0.0", "0.0", "0.0"))
-pull = Expression(("strain*depth", "0.0", "0.0"), strain=0.0, depth=depth)
 hold_back = DirichletBC(V, hold, back)
-pull_front = DirichletBC(V, pull, front)
-bcs = [hold_back, pull_front]
-
-
-gamma = Constant(0.0)
-F = inner(P(u, gamma), grad(v))*dx
-J = derivative(F, u, du)
+bcs = [hold_back]
 
 displacement_file = File("output/displacement.pvd")
 stress_file = File("output/stress.pvd")
-applied_strain = 0.0
+t = 0.0
 
-while applied_strain <= 0.5:
-    pull.strain = applied_strain
+while t <= 2*DOLFIN_PI:
+    active_strain = 0.1*(1 - sin(t - 3*DOLFIN_PI/2))
+    gamma = Constant(active_strain)
+    F = inner(P(u, gamma), grad(v))*dx
+    J = derivative(F, u, du)
     solve(F == 0, u, bcs, J=J,
           form_compiler_parameters=ffc_options)
-    applied_strain = applied_strain + 0.01
+    t = t + 0.1
     displacement_file << u
     stress = project(sigma(u, gamma)[0][0], Q) #ff
-    print "stress-strain:", applied_strain, max(stress.vector().array())
+    print "stress-strain:", active_strain, max(stress.vector().array())
     stress_file << stress
