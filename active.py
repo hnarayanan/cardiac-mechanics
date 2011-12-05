@@ -92,6 +92,7 @@ bottom, top = compile_subdomains([bottom_condition, top_condition])
 
 hold = Expression(("0.0", "0.0", "0.0"))
 hold_back = DirichletBC(V, hold, back)
+#hold_front = DirichletBC(V, hold, front)
 bcs = [hold_back]
 
 displacement_file = File("output/displacement.pvd")
