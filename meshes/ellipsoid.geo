@@ -9,15 +9,15 @@ a_epi = a_endo + t_apex;
 b_epi = b_endo + t_equator;
 
 
-Point(1) =  { b_endo,  0.0,    0.0, lc};
-Point(2) =  { 0.0   ,  a_endo, 0.0, lc};
-Point(3) =  {-b_endo,  0.0,    0.0, lc};
-Point(4) =  { 0.0   , -a_endo, 0.0, lc};
+Point(1)  = { b_endo,  0.0,    0.0, lc};
+Point(2)  = { 0.0   ,  a_endo, 0.0, lc};
+Point(3)  = {-b_endo,  0.0,    0.0, lc};
+Point(4)  = { 0.0   , -a_endo, 0.0, lc};
 
-Point(5) =  { b_epi,  0.0,    0.0, lc};
-Point(6) =  { 0.0   ,  a_epi, 0.0, lc};
-Point(7) =  {-b_epi,  0.0,    0.0, lc};
-Point(8) =  { 0.0   , -a_epi, 0.0, lc};
+Point(5)  = { b_epi,   0.0,    0.0, lc};
+Point(6)  = { 0.0   ,  a_epi,  0.0, lc};
+Point(7)  = {-b_epi,   0.0,    0.0, lc};
+Point(8)  = { 0.0   , -a_epi,  0.0, lc};
 
 Point(10) = { 0.0,     0.0,    0.0, lc};
 
