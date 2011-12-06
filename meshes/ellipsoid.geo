@@ -5,9 +5,14 @@ b_endo = 1.1;
 t_equator = 1.0;
 t_apex = 0.5;
 
+a_trunc = 1.0;
+
+
 a_epi = a_endo + t_apex;
 b_epi = b_endo + t_equator;
 
+b_endo_trunc = b_endo*Sqrt(1.0 - a_trunc^2/a_endo^2);
+b_epi_trunc  = b_epi*Sqrt(1.0 - a_trunc^2/a_epi^2);
 
 Point(1)  = { b_endo,  0.0,    0.0, lc};
 Point(2)  = { 0.0   ,  a_endo, 0.0, lc};
@@ -21,11 +26,13 @@ Point(8)  = { 0.0   , -a_epi,  0.0, lc};
 
 Point(10) = { 0.0,     0.0,    0.0, lc};
 
+Point(11) = {b_endo_trunc, a_trunc, 0.0, lc};
+Point(12) = {b_epi_trunc, a_trunc, 0.0, lc};
 
 Ellipse(1) = {4, 10, 2, 1};
-Ellipse(2) = {1, 10, 3, 2};
-Line(3)    = {2, 6};
-Ellipse(4) = {6, 10, 8, 5};
+Ellipse(2) = {1, 10, 3, 11};
+Line(3)    = {11, 12};
+Ellipse(4) = {12, 10, 8, 5};
 Ellipse(5) = {5, 10, 7, 8};
 Line(6)    = {8, 4};
 
