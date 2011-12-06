@@ -1,13 +1,14 @@
-lc = 0.5;
-
+// Parameters defining the ventricular geometry
 a_endo = 2.5;
 b_endo = 1.1;
-t_equator = 1.0;
-t_apex = 0.5;
+a_trunc = 1.4;
+t_equator = 0.8;
+t_apex = 0.4;
 
-a_trunc = 1.0;
+// Mesh density
+lc = 0.25;
 
-
+// Define the geometry
 a_epi = a_endo + t_apex;
 b_epi = b_endo + t_equator;
 
