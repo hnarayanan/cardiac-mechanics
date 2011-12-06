@@ -32,4 +32,6 @@ Line(6)    = {8, 4};
 Line Loop(9)  = {1, 2, 3, 4, 5, 6};
 Plane Surface(10) = {9};
 
-vol[] = Extrude{{0, 1, 0}, {0, 0, 0}, Pi/2.0}{ Surface{10}; };
+vol01[] = Extrude{{0, 1, 0}, {0, 0, 0}, 2*Pi/3}{ Surface{10}; };
+vol02[] = Extrude{{0, 1 ,0}, {0, 0, 0}, 2*Pi/3}{ Surface{vol01[0]}; };
+vol03[] = Extrude{{0, 1 ,0}, {0, 0, 0}, 2*Pi/3}{ Surface{vol02[0]}; };
