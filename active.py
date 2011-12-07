@@ -15,7 +15,7 @@ width = 1
 depth = 10
 height = 1
 n = 4
-mesh = Box(0, width, 0, depth, 0, height, n*depth, n*width, n*height) #Might be a bug
+mesh = Box(0, 0, 0, depth, width, height, n*depth, n*width, n*height)
 plot(mesh)
 interactive()
 
