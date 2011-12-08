@@ -107,5 +107,6 @@ while t <= 2*DOLFIN_PI:
     t = t + 0.1
     displacement_file << u
     stress = project(sigma(u, gamma)[0][0], Q) #ff
-    print "stress-strain:", active_strain, max(stress.vector().array())
+    center = (depth/2.0, width/2.0, height/2.0)
+    print "stress-strain:", active_strain, stress(center)
     stress_file << stress
