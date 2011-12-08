@@ -11,15 +11,14 @@ l_t_equator = 0.8;
 l_t_apex = 0.4;
 
 // Parameters defining the right ventricular geometry
-r_a_endo = 1.5;
-r_b_endo = 1.0;
+r_a_endo = 2.1;
+r_b_endo = 1.2;
 r_a_trunc = 0.75;
 r_t_equator = 0.25;
 r_t_apex = 0.25;
 
 // Parameters relating the two geometries
-offset_x = 8.0;
-offset_y = 1.0;
+offset_x = -2.0;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -71,20 +70,22 @@ r_b_epi = r_b_endo + r_t_equator;
 r_b_endo_trunc = r_b_endo*Sqrt(1.0 - r_a_trunc^2/r_a_endo^2);
 r_b_epi_trunc  = r_b_epi*Sqrt(1.0 - r_a_trunc^2/r_a_epi^2);
 
+offset_y = 0.0 + l_a_trunc - r_a_trunc;
+
 // Define control points for the right ventricle
-Point(101)  = { r_b_endo + offset_x,  0.0      + offset_y, 0.0, h};
-Point(102)  = { 0.0      + offset_x,  r_a_endo + offset_y, 0.0, h};
-Point(103)  = {-r_b_endo + offset_x,  0.0      + offset_y, 0.0, h};
-Point(104)  = { 0.0      + offset_x, -r_a_endo + offset_y, 0.0, h};
-Point(105)  = { r_b_epi + offset_x,  0.0     + offset_y, 0.0, h};
-Point(106)  = { 0.0     + offset_x,  r_a_epi + offset_y, 0.0, h};
-Point(107)  = {-r_b_epi + offset_x,  0.0     + offset_y, 0.0, h};
-Point(108)  = { 0.0     + offset_x, -r_a_epi + offset_y, 0.0, h};
+Point(101)  = { r_b_endo,  0.0,      0.0, h};
+Point(102)  = { 0.0     ,  r_a_endo, 0.0, h};
+Point(103)  = {-r_b_endo,  0.0,      0.0, h};
+Point(104)  = { 0.0     , -r_a_endo, 0.0, h};
+Point(105)  = { r_b_epi, 0.0,     0.0, h};
+Point(106)  = { 0.0,     r_a_epi, 0.0, h};
+Point(107)  = {-r_b_epi, 0.0,     0.0, h};
+Point(108)  = { 0.0   , -r_a_epi, 0.0, h};
 
-Point(110) = { 0.0 + offset_x,     0.0  + offset_y,    0.0, h};
+Point(110) = { 0.0,     0.0,    0.0, h};
 
-Point(111) = {r_b_endo_trunc + offset_x, r_a_trunc + offset_y, 0.0, h};
-Point(112) = {r_b_epi_trunc  + offset_x, r_a_trunc + offset_y, 0.0, h};
+Point(111) = {r_b_endo_trunc, r_a_trunc, 0.0, h};
+Point(112) = {r_b_epi_trunc, r_a_trunc, 0.0, h};
 
 // Define control lines for the right ventricle
 Ellipse(101) = {104, 110, 102, 101};
@@ -94,13 +95,17 @@ Ellipse(104) = {112, 110, 108, 105};
 Ellipse(105) = {105, 110, 107, 108};
 Line(106)    = {108, 104};
 
-Line Loop(109)  = {101, 102, 103, 104, 105, 106};
+Line Loop(109) = {101, 102, 103, 104, 105, 106};
 
 // Define the control surface for the right ventricle
 Plane Surface(110) = {109};
 
+// Translate the surface of the right ventricle by the offset and
+// rotate it initially
+Translate { offset_x, offset_y, 0 } { Surface{110}; }
+Rotate{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, Pi/3}{ Surface{110}; }
+
 // Revolve the control surface to generate the volume of the left
 // ventricle
-vol04[] = Extrude{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0, 0}, 2*Pi/3}{ Surface{110}; };
-vol05[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0, 0}, 2*Pi/3}{ Surface{vol04[0]}; };
-vol06[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0, 0}, 2*Pi/3}{ Surface{vol05[0]}; };
+vol04[] = Extrude{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{110}; };
+vol05[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{vol04[0]}; };
