@@ -7,18 +7,18 @@ h = 0.25;
 l_a_endo = 2.5;
 l_b_endo = 1.1;
 l_a_trunc = 1.4;
-l_t_equator = 0.8;
+l_t_equator = 0.65;
 l_t_apex = 0.4;
 
 // Parameters defining the right ventricular geometry
-r_a_endo = 2.1;
-r_b_endo = 1.2;
+r_a_endo = 2.2;
+r_b_endo = 1.4;
 r_a_trunc = 0.75;
 r_t_equator = 0.25;
 r_t_apex = 0.25;
 
 // Parameters relating the two geometries
-offset_x = -2.0;
+offset_x = -1.3;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -109,3 +109,5 @@ Rotate{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, Pi/3}{ Surface{110}; }
 // ventricle
 vol04[] = Extrude{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{110}; };
 vol05[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{vol04[0]}; };
+
+Compound Volume (10) = {1, 2, 3, 4, 5};
