@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 // Mesh density
-h = 0.25;
+h = 0.5;
 
 // Parameters defining the left ventricular geometry
 l_a_endo = 2.5;
@@ -18,7 +18,7 @@ r_t_equator = 0.25;
 r_t_apex = 0.25;
 
 // Parameters relating the two geometries
-offset_x = -1.3;
+offset_x = -1.0;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -103,11 +103,11 @@ Plane Surface(110) = {109};
 // Translate the surface of the right ventricle by the offset and
 // rotate it initially
 Translate { offset_x, offset_y, 0 } { Surface{110}; }
-Rotate{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, Pi/3}{ Surface{110}; }
+Rotate{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 3.3*Pi/9}{ Surface{110}; }
 
 // Revolve the control surface to generate the volume of the left
 // ventricle
-vol04[] = Extrude{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{110}; };
-vol05[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 2*Pi/3}{ Surface{vol04[0]}; };
+vol04[] = Extrude{{0, 1, 0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 5.7*Pi/9}{ Surface{110}; };
+vol05[] = Extrude{{0, 1 ,0}, {0.0 + offset_x, 0.0  + offset_y, 0}, 5.7*Pi/9}{ Surface{vol04[0]}; };
 
 Compound Volume (10) = {1, 2, 3, 4, 5};
