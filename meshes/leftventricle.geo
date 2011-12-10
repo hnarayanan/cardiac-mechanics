@@ -2,8 +2,8 @@
 a_endo = 2.5;
 b_endo = 1.1;
 a_trunc = 1.4;
-t_equator = 0.8;
-t_apex = 0.4;
+t_equator = 0.6;
+t_apex = 0.3;
 
 // Mesh density
 lc = 0.25;
@@ -43,3 +43,7 @@ Plane Surface(10) = {9};
 vol01[] = Extrude{{0, 1, 0}, {0, 0, 0}, 2*Pi/3}{ Surface{10}; };
 vol02[] = Extrude{{0, 1 ,0}, {0, 0, 0}, 2*Pi/3}{ Surface{vol01[0]}; };
 vol03[] = Extrude{{0, 1 ,0}, {0, 0, 0}, 2*Pi/3}{ Surface{vol02[0]}; };
+
+Physical Surface ("Endocardium") = {20, 24, 47, 51, 74, 78};
+Physical Surface ("Base") = {28, 82, 55};
+Physical Surface ("Epicardium") = {32, 35, 86, 89, 59, 62};
