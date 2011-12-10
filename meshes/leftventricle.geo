@@ -47,3 +47,5 @@ vol03[] = Extrude{{0, 1 ,0}, {0, 0, 0}, 2*Pi/3}{ Surface{vol02[0]}; };
 Physical Surface ("Endocardium") = {20, 24, 47, 51, 74, 78};
 Physical Surface ("Base") = {28, 82, 55};
 Physical Surface ("Epicardium") = {32, 35, 86, 89, 59, 62};
+
+Physical Volume("Ventricle") = {1, 2, 3};
