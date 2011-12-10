@@ -6,15 +6,11 @@ facet_regions = MeshFunction("uint", mesh,
 regions = {"Endocardium": 1, "Base": 2, "Epicardium": 3}
 
 V = VectorFunctionSpace(mesh, "CG", 1)
+u = TrialFunction(V)
+v = TestFunction(V)
 
 hold = Constant((0.0, 0.0, 0.0))
 bcs = DirichletBC(V, hold, facet_regions, regions["Base"])
-
-u = TrialFunction(V)
-v = TestFunction(V)
-f = Constant((0.0, 0.0, 0.0))
-p = Constant(1.0)
-n = FacetNormal(mesh)
 
 E  = 10.0
 nu = 0.3
@@ -27,10 +23,23 @@ def sigma(v):
         lmbda*tr(sym(grad(v)))*Identity(v.cell().d)
 
 
+f = Constant((0.0, 0.0, 0.0))
+n = FacetNormal(mesh)
 dss = ds[facet_regions]
+
+t = 0.0
+displacement_file = File("output/displacement.pvd")
+
 a = inner(sigma(u), grad(v))*dx
-L = inner(f, v)*dx + inner(p*n, v)*dss(regions["Endocardium"])
+L1 = inner(f, v)*dx
 
 u = Function(V)
-solve(a == L, u, bcs)
-plot(u, mode="displacement", interactive=True)
+
+while t <= 2*DOLFIN_PI:
+
+    p = Constant((1 - sin(t - 3*DOLFIN_PI/2) - 0.5))
+    L2 = inner(p*n, v)*dss(regions["Endocardium"])
+    L = L1 + L2
+    solve(a == L, u, bcs)
+    t = t + 0.1
+    displacement_file << u
