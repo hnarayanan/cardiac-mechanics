@@ -5,10 +5,13 @@ from dolfin import *
 from numpy import array
 
 parameters["form_compiler"]["cpp_optimize"] = True
-ffc_options = {"optimize": True, \
-               "eliminate_zeros": True, \
-               "precompute_basis_const": True, \
-               "precompute_ip_const": True}
+ffc_options = {
+    "quadrature_degree": 5,
+    "eliminate_zeros": True,
+    "precompute_basis_const": True,
+    "precompute_ip_const": True
+    # "optimize": True
+}
 
 # Dimensions and mesh density of the domain
 width = 1
@@ -93,8 +96,8 @@ hold_back = DirichletBC(V, hold, back)
 #hold_front = DirichletBC(V, hold, front)
 bcs = [hold_back]
 
-displacement_file = File("output/displacement.pvd")
-stress_file = File("output/stress.pvd")
+displacement_file = File("../output/displacement.pvd")
+stress_file = File("../output/stress.pvd")
 t = 0.0
 
 while t <= 2*DOLFIN_PI:

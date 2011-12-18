@@ -1,5 +1,14 @@
 from dolfin import *
 
+parameters["form_compiler"]["cpp_optimize"] = True
+ffc_options = {
+    "quadrature_degree": 5,
+    "eliminate_zeros": True,
+    "precompute_basis_const": True,
+    "precompute_ip_const": True
+    # "optimize": True
+}
+
 mesh = Mesh("meshes/leftventricle.xml")
 facet_regions = MeshFunction("uint", mesh,
                              "meshes/leftventricle_facet_region.xml")
@@ -28,7 +37,7 @@ n = FacetNormal(mesh)
 dss = ds[facet_regions]
 
 t = 0.0
-displacement_file = File("output/displacement.pvd")
+displacement_file = File("../output/displacement.pvd")
 
 a = inner(sigma(u), grad(v))*dx
 L1 = inner(f, v)*dx

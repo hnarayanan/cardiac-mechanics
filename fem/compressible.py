@@ -5,10 +5,13 @@ from dolfin import *
 from numpy import array
 
 parameters["form_compiler"]["cpp_optimize"] = True
-ffc_options = {"optimize": True, \
-               "eliminate_zeros": True, \
-               "precompute_basis_const": True, \
-               "precompute_ip_const": True}
+ffc_options = {
+    "quadrature_degree": 5,
+    "eliminate_zeros": True,
+    "precompute_basis_const": True,
+    "precompute_ip_const": True
+    # "optimize": True
+}
 
 # Dimensions and mesh density of the domain
 width = 1
@@ -81,8 +84,8 @@ bcs = [hold_bottom, shear_top]
 F = inner(P(u), grad(v))*dx
 J = derivative(F, u, du)
 
-displacement_file = File("output/displacement.pvd")
-stress_file = File("output/stress.pvd")
+displacement_file = File("../output/displacement.pvd")
+stress_file = File("../output/stress.pvd")
 applied_gamma = 0.0
 
 while applied_gamma <= 0.50:
