@@ -42,6 +42,7 @@ using namespace CGAL::parameters;
 
 // General
 double h;
+int angle;
 
 // Left ventricle
 // Center
@@ -75,6 +76,7 @@ void load_parameters()
     boost::property_tree::ini_parser::read_ini("parameters.ini", pt);
 
     h = boost::lexical_cast<double>(pt.get<std::string>("general.h"));
+    angle = boost::lexical_cast<int>(pt.get<std::string>("general.angle"));
 
     l_c_x = boost::lexical_cast<double>(pt.get<std::string>("left_ventricle.center_x"));
     l_c_y = boost::lexical_cast<double>(pt.get<std::string>("left_ventricle.center_y"));
@@ -148,8 +150,8 @@ int main()
 
     // Mesh criteria
     Mesh_criteria criteria(edge_size = h,
-    			   facet_angle = 25, facet_size = h,
-    			   cell_radius_edge_ratio = 2, cell_size = h);
+    			   facet_angle = 25, facet_size = 2*h,
+    			   cell_radius_edge_ratio = 2, cell_size = 2*h);
 
     // Create edge that we want to preserve
     Polylines l_base_endo (1);
@@ -168,7 +170,7 @@ int main()
     double r_r_endo = r_b_endo*std::sqrt(1.0 - r_a_trunc*r_a_trunc/(r_a_endo*r_a_endo));
     double r_r_epi  = r_b_epi*std::sqrt(1.0 - r_a_trunc*r_a_trunc/(r_a_epi*r_a_epi));
 
-    for(int i = 0; i < 360; ++i)
+    for(int i = 0; i < 360; i += 5)
     {
 	Point l_p_endo (l_c_x + r_l_endo*std::cos(i*CGAL_PI/180),
 			l_c_y + r_l_endo*std::sin(i*CGAL_PI/180),
@@ -179,14 +181,21 @@ int main()
 		       l_c_z + l_a_trunc);
 	l_base_epi_segment.push_back(l_p_epi);
 
-	Point r_p_endo (r_c_x + r_r_endo*std::cos(i*CGAL_PI/180),
-			r_c_y + r_r_endo*std::sin(i*CGAL_PI/180),
-			r_c_z + r_a_trunc);
-	r_base_endo_segment.push_back(r_p_endo);
-	Point r_p_epi (r_c_x + r_r_epi*std::cos(i*CGAL_PI/180),
-		       r_c_y + r_r_epi*std::sin(i*CGAL_PI/180),
-		       r_c_z + r_a_trunc);
-	r_base_epi_segment.push_back(r_p_epi);
+	if (i >= 180 - angle/2 && i <= 180 + angle/2)
+	{
+	    Point r_p_endo (r_c_x + r_r_endo*std::cos(i*CGAL_PI/180),
+			    r_c_y + r_r_endo*std::sin(i*CGAL_PI/180),
+			    r_c_z + r_a_trunc);
+	    r_base_endo_segment.push_back(r_p_endo);
+	}
+
+	if (i >= 180 - angle && i <= 180 + angle)
+	{
+	    Point r_p_epi (r_c_x + r_r_epi*std::cos(i*CGAL_PI/180),
+			   r_c_y + r_r_epi*std::sin(i*CGAL_PI/180),
+			   r_c_z + r_a_trunc);
+	    r_base_epi_segment.push_back(r_p_epi);
+	}
     }
     l_base_endo_segment.push_back(l_base_endo_segment.front());
     l_base_epi_segment.push_back(l_base_epi_segment.front());
@@ -196,8 +205,8 @@ int main()
     // Insert edge in domain
     domain.add_features(l_base_endo.begin(), l_base_endo.end());
     domain.add_features(l_base_epi.begin(), l_base_epi.end());
-//    domain.add_features(r_base_endo.begin(), r_base_endo.end());
-//    domain.add_features(r_base_epi.begin(), r_base_epi.end());
+    domain.add_features(r_base_endo.begin(), r_base_endo.end());
+    domain.add_features(r_base_epi.begin(), r_base_epi.end());
 
     // Mesh generation without feature preservation
     C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
