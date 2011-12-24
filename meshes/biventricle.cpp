@@ -114,12 +114,12 @@ void load_parameters()
 
 // Function
 FT ellipsoid (const Point& p,
-	      double o_x, double o_y, double o_z,
+	      double c_x, double c_y, double c_z,
 	      double a, double b, double c)
 {
-    return sqrt(b*b*c*c*(p.z() - o_z)*(p.z() - o_z) +
-		c*c*a*a*(p.x() - o_x)*(p.x() - o_x) +
-		a*a*b*b*(p.y() - o_y)*(p.y() - o_y)) - a*b*c;
+    return sqrt(b*b*c*c*(p.z() - c_z)*(p.z() - c_z) +
+		c*c*a*a*(p.x() - c_x)*(p.x() - c_x) +
+		a*a*b*b*(p.y() - c_y)*(p.y() - c_y)) - a*b*c;
 }
 
 FT ventricles (const Point& p)
