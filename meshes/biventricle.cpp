@@ -40,10 +40,9 @@ using namespace CGAL::parameters;
 
 // Declare parameters defining the ventricular geometry (defined in parameters.ini)
 
-// General
-double h;
-int r_angle_endo;
-int r_angle_epi;
+// Mesh parameters
+double mesh_edge_size, mesh_facet_angle, mesh_facet_size;
+double mesh_cell_radius_edge_ratio, mesh_cell_size;
 
 // Left ventricle
 // Center
@@ -70,13 +69,21 @@ double r_t_equator_b, r_t_equator_c, r_t_apex;
 // Major epicardium axes
 double r_a_epi, r_b_epi, r_c_epi;
 
+// Angles over which to define sharp edges
+int r_angle_endo;
+int r_angle_epi;
+
 void load_parameters()
 {
 
     boost::property_tree::ptree pt;
     boost::property_tree::ini_parser::read_ini("parameters.ini", pt);
 
-    h = boost::lexical_cast<double>(pt.get<std::string>("general.h"));
+    mesh_edge_size = boost::lexical_cast<double>(pt.get<std::string>("mesh.edge_size"));
+    mesh_facet_angle = boost::lexical_cast<int>(pt.get<std::string>("mesh.facet_angle"));
+    mesh_facet_size = boost::lexical_cast<double>(pt.get<std::string>("mesh.facet_size"));
+    mesh_cell_radius_edge_ratio = boost::lexical_cast<double>(pt.get<std::string>("mesh.cell_radius_edge_ratio"));
+    mesh_cell_size = boost::lexical_cast<double>(pt.get<std::string>("mesh.cell_size"));
 
     l_c_x = boost::lexical_cast<double>(pt.get<std::string>("left_ventricle.center_x"));
     l_c_y = boost::lexical_cast<double>(pt.get<std::string>("left_ventricle.center_y"));
@@ -152,9 +159,11 @@ int main()
     Mesh_domain domain(ventricles, K::Sphere_3(Point(0, 0, 0), 10.0));
 
     // Mesh criteria
-    Mesh_criteria criteria(edge_size = 0.25*h,
-    			   facet_angle = 25, facet_size = h,
-    			   cell_radius_edge_ratio = 2, cell_size = h);
+    Mesh_criteria criteria(edge_size = mesh_edge_size,
+    			   facet_angle = mesh_facet_angle,
+			   facet_size = mesh_facet_size,
+    			   cell_radius_edge_ratio = mesh_cell_radius_edge_ratio,
+			   cell_size = mesh_cell_size);
 
     // Create edge that we want to preserve
     Polylines l_base_endo (1);
