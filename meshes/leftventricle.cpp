@@ -34,17 +34,18 @@ typedef CGAL::Mesh_criteria_3<Tr> Mesh_criteria;
 using namespace CGAL::parameters;
 
 // Parameters defining the ventricular geometry
-double a_endo = 2.5;
-double b_endo = 1.1;
-double c_endo = b_endo;
+double a_endo = 2.5;     // z
+double b_endo = 1.1;     // x
+double c_endo = b_endo;  // y
 
 double a_trunc = 1.4;
-double t_equator = 0.6;
+double t_equator_b = 0.6;
+double t_equator_c = t_equator_b;
 double t_apex = 0.3;
 
 double a_epi = a_endo + t_apex;
-double b_epi = b_endo + t_equator;
-double c_epi = c_endo + t_equator;
+double b_epi = b_endo + t_equator_b;
+double c_epi = c_endo + t_equator_c;
 
 double l_o_x = 0.0;
 double l_o_y = 0.0;
@@ -55,24 +56,24 @@ double l_o_z = 0.0;
 FT epicardium (const Point& p)
 {
     return
-	sqrt(b_epi*b_epi*c_epi*c_epi*p.x()*p.x() +
-	     c_epi*c_epi*a_epi*a_epi*p.y()*p.y() +
-	     a_epi*a_epi*b_epi*b_epi*p.z()*p.z()) -
+	sqrt(b_epi*b_epi*c_epi*c_epi*p.z()*p.z() +
+	     c_epi*c_epi*a_epi*a_epi*p.x()*p.x() +
+	     a_epi*a_epi*b_epi*b_epi*p.y()*p.y()) -
 	a_epi*b_epi*c_epi;
 }
 
 FT endocardium (const Point& p)
 {
     return
-	sqrt(b_endo*b_endo*c_endo*c_endo*p.x()*p.x() +
-	     c_endo*c_endo*a_endo*a_endo*p.y()*p.y() +
-	     a_endo*a_endo*b_endo*b_endo*p.z()*p.z()) -
+	sqrt(b_endo*b_endo*c_endo*c_endo*p.z()*p.z() +
+	     c_endo*c_endo*a_endo*a_endo*p.x()*p.x() +
+	     a_endo*a_endo*b_endo*b_endo*p.y()*p.y()) -
 	a_endo*b_endo*c_endo;
 }
 
 FT sphere_function (const Point& p)
 {
-    if(epicardium(p) < 0 && endocardium(p) > 0 && p.x() < a_trunc)
+    if(epicardium(p) < 0 && endocardium(p) > 0 && p.z() < a_trunc)
 	return -1;
     else
 	return 1;
@@ -82,7 +83,7 @@ FT sphere_function (const Point& p)
 
 int main()
 {
-  // Domain (Warning: Sphere_3 constructor uses squared radius !)
+  // Domain
   Mesh_domain domain(sphere_function, K::Sphere_3(Point(0, 0, 0), 9.));
 
   // Mesh criteria
