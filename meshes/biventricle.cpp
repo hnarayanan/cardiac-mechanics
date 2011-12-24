@@ -130,7 +130,7 @@ FT ventricles (const Point& p)
        (ellipsoid(p, r_c_x, r_c_y, r_c_z, r_a_epi,  r_b_epi,  r_c_epi)  <= 0.0 &&
 	ellipsoid(p, r_c_x, r_c_y, r_c_z, r_a_endo, r_b_endo, r_c_endo) >= 0.0 &&
 	ellipsoid(p, l_c_x, l_c_y, l_c_z, l_a_endo, l_b_endo, l_c_endo) >  0.0 &&
-	p.z() <= r_a_trunc))
+	p.z() <= r_a_trunc + r_c_z))
 	return -1;
     else
 	return 1;

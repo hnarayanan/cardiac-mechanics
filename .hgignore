@@ -4,6 +4,7 @@ syntax:glob
 *.orig
 output/*.pvd
 output/*.vtu
+output/*.avi
 
 syntax: regexp
 .*\#.*\#$
