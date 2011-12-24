@@ -144,7 +144,7 @@ int main()
     load_parameters();
 
     // Domain
-    Mesh_domain domain(ventricles, K::Sphere_3(Point(0, 0, 0), 9.));
+    Mesh_domain domain(ventricles, K::Sphere_3(Point(0, 0, 0), 10.0));
 
     // Mesh criteria
     Mesh_criteria criteria(edge_size = h,
