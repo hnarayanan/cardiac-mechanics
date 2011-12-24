@@ -151,9 +151,56 @@ int main()
     			   facet_angle = 25, facet_size = h,
     			   cell_radius_edge_ratio = 2, cell_size = h);
 
+    // Create edge that we want to preserve
+    Polylines l_base_endo (1);
+    Polyline& l_base_endo_segment = l_base_endo.front();
+    Polylines l_base_epi (1);
+    Polyline& l_base_epi_segment = l_base_epi.front();
+
+    Polylines r_base_endo (1);
+    Polyline& r_base_endo_segment = r_base_endo.front();
+    Polylines r_base_epi (1);
+    Polyline& r_base_epi_segment = r_base_epi.front();
+
+    double r_l_endo = l_b_endo*std::sqrt(1.0 - l_a_trunc*l_a_trunc/(l_a_endo*l_a_endo));
+    double r_l_epi  = l_b_epi*std::sqrt(1.0 - l_a_trunc*l_a_trunc/(l_a_epi*l_a_epi));
+
+    double r_r_endo = r_b_endo*std::sqrt(1.0 - r_a_trunc*r_a_trunc/(r_a_endo*r_a_endo));
+    double r_r_epi  = r_b_epi*std::sqrt(1.0 - r_a_trunc*r_a_trunc/(r_a_epi*r_a_epi));
+
+    for(int i = 0; i < 360; ++i)
+    {
+	Point l_p_endo (l_c_x + r_l_endo*std::cos(i*CGAL_PI/180),
+			l_c_y + r_l_endo*std::sin(i*CGAL_PI/180),
+			l_c_z + l_a_trunc);
+	l_base_endo_segment.push_back(l_p_endo);
+	Point l_p_epi (l_c_x + r_l_epi*std::cos(i*CGAL_PI/180),
+		       l_c_y + r_l_epi*std::sin(i*CGAL_PI/180),
+		       l_c_z + l_a_trunc);
+	l_base_epi_segment.push_back(l_p_epi);
+
+	Point r_p_endo (r_c_x + r_r_endo*std::cos(i*CGAL_PI/180),
+			r_c_y + r_r_endo*std::sin(i*CGAL_PI/180),
+			r_c_z + r_a_trunc);
+	r_base_endo_segment.push_back(r_p_endo);
+	Point r_p_epi (r_c_x + r_r_epi*std::cos(i*CGAL_PI/180),
+		       r_c_y + r_r_epi*std::sin(i*CGAL_PI/180),
+		       r_c_z + r_a_trunc);
+	r_base_epi_segment.push_back(r_p_epi);
+    }
+    l_base_endo_segment.push_back(l_base_endo_segment.front());
+    l_base_epi_segment.push_back(l_base_epi_segment.front());
+    r_base_endo_segment.push_back(r_base_endo_segment.front());
+    r_base_epi_segment.push_back(r_base_epi_segment.front());
+
+    // Insert edge in domain
+    domain.add_features(l_base_endo.begin(), l_base_endo.end());
+    domain.add_features(l_base_epi.begin(), l_base_epi.end());
+//    domain.add_features(r_base_endo.begin(), r_base_endo.end());
+//    domain.add_features(r_base_epi.begin(), r_base_epi.end());
+
     // Mesh generation without feature preservation
-    C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria,
-    					CGAL::parameters::no_features());
+    C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
 
     std::ofstream medit_file("biventricle.mesh");
     c3t3.output_to_medit(medit_file);
