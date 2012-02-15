@@ -16,7 +16,6 @@ a_s  =  2.481 #kPa
 b_s  = 11.120
 a_fs =  0.356 #kPa
 b_fs = 11.436
-p    =  0     #kPa
 
 # Identity Matrix
 I = Matrix([[1, 0, 0],
@@ -47,30 +46,24 @@ def sigma(F):
     s = F*s0
     n = F*n0
 
-    # Define the Cauchy stress
+    # Define the Cauchy stress in terms of the invariants
     psi = strain_energy()
-    sigma = - p*I + 2*diff(psi, I1)*B \
+    sigma =   2*diff(psi, I1)*B \
             + 2*diff(psi, I2)*(I1*B - B**2) \
+            + 2*diff(psi, I3)*I3*I \
             + 2*diff(psi, I4_f)*(f*f.T) \
             + 2*diff(psi, I4_s)*(s*s.T) \
             + diff(psi, I8_fs)*(f*s.T + s*f.T) \
             + diff(psi, I8_fn)*(f*n.T + n*f.T)
 
-    # Principle isotropic invariants
-    _I1 = C.trace()
-    _I2 = Rational(1, 2)*(I1*I1 - (C*C).trace())
-    _I3 = C.det()
-
-    # Anisotropic (quasi) invariants
-    _I4_f = (f0.T*C*f0)[0]
-    _I4_s = (s0.T*C*s0)[0]
-    _I8_fs = (f0.T*C*s0)[0]
-    _I8_fn = (f0.T*C*n0)[0]
-
-
-    return(sigma.subs({I1: _I1, I2:_I2, I3:_I3,
-                       I4_f:_I4_f, I4_s:_I4_s,
-                       I8_fs: _I8_fs, I8_fn:_I8_fn}))
+    # Substitute values of invariants before returning the stress
+    return(sigma.subs({I1: C.trace(),
+                       I2: Rational(1, 2)*(I1*I1 - (C*C).trace()),
+                       I3: C.det(),
+                       I4_f: (f0.T*C*f0)[0],
+                       I4_s: (s0.T*C*s0)[0],
+                       I8_fs: (f0.T*C*s0)[0],
+                       I8_fn: (f0.T*C*n0)[0]}))
 
 # Deformation gradients and corresponding stresses
 F_fs = Matrix([[1, 0, 0],
