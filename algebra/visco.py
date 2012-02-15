@@ -36,6 +36,9 @@ def sigma(F):
     B = F*F.T
     C = F.T*F
 
+    # Jacobian
+    J = F.det()
+
     # Reference fibre, sheet and sheet-normal directions
     f0 = Matrix([1, 0, 0])
     s0 = Matrix([0, 1, 0])
@@ -48,13 +51,13 @@ def sigma(F):
 
     # Define the Cauchy stress in terms of the invariants
     psi = strain_energy()
-    sigma =   2*diff(psi, I1)*B \
+    sigma = ( 2*diff(psi, I1)*B \
             + 2*diff(psi, I2)*(I1*B - B**2) \
             + 2*diff(psi, I3)*I3*I \
             + 2*diff(psi, I4_f)*(f*f.T) \
             + 2*diff(psi, I4_s)*(s*s.T) \
             + diff(psi, I8_fs)*(f*s.T + s*f.T) \
-            + diff(psi, I8_fn)*(f*n.T + n*f.T)
+            + diff(psi, I8_fn)*(f*n.T + n*f.T) ) / J
 
     # Substitute values of invariants before returning the stress
     return(sigma.subs({I1: C.trace(),
