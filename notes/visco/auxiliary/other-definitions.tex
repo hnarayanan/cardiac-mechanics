@@ -1,0 +1,16 @@
+\setlength{\oddsidemargin}{0.5in}
+
+\makeatletter
+\providecommand*{\toclevel@chap}{0}
+\makeatother
+
+\newtheorem{definition*}{Definition}
+\newcommand{\D}[1]{\ensuremath{\mathrm{d}#1}}
+
+\newcommand{\todo}[1]{\vspace{5 mm}\par \noindent
+  \marginpar{\textsc{ToDo}}
+  \framebox{\begin{minipage}[c]{0.95 \textwidth}
+      \tt #1 \end{minipage}}\vspace{5 mm}\par}
+
+\newcommand{\R}{\mathbf R}
+\newtheorem{theorem}{Theorem}
