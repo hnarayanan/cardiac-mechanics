@@ -1,7 +1,51 @@
 \section{The formulation}
 \label{formulation}
 
-The mathematical model is formulated within. \cite{Holzapfel:2009bb}
+From \citep{Holzapfel:2009bb}, we have:
+
+\begin{equation}
+  \begin{split}
+    J\Bsigma &=   2 \psi_{1} \bB
+                + 2 \psi_{2} \left(I_{1} \bB - \bB^{2}\right)
+                + 2 \psi_{3} I_{3} \bone
+                + 2 \psi_{4f} \bff\otimes\bff
+                + 2 \psi_{4s} \bs\otimes\bs\\
+        &\quad  + \psi_{8fs} \left( \bff\otimes\bs + \bs\otimes\bff \right)
+                + \psi_{8fn} \left( \bff\otimes\bn + \bn\otimes\bff \right)
+  \end{split}
+  \label{cauchy-stress}
+\end{equation}
+
+\noindent Since we are more interested in the second Piola-Kirchhoff
+stress tensor, $\bS(\bC)$, than the Cauchy stress, $\Bsigma(\bB)$, we
+first need to recast this constitutive relation. For this, we use the
+relation $\bS = \bF^{-1} J \Bsigma \bF^{-\mathrm{T}}$ in conjunction with the following transformation
+rules:
+
+\begin{equation*}
+  \begin{split}
+    \bF^{-1} \bone \bF^{-\mathrm{T}} &= \bC^{-1}\\
+    \bF^{-1} \bB \bF^{-\mathrm{T}} &= \bone\\
+    \bF^{-1} \bB^{2} \bF^{-\mathrm{T}} &= \bC\\
+    \bF^{-1} \ba\otimes\bb \bF^{-\mathrm{T}} &= \ba_{0} \otimes \bb_{0},
+  \end{split}
+\end{equation*}
+
+\noindent where $\ba$ and $\bb$ can be either $\bff$, $\bs$ or
+$\bn$. Applying these rules to Eq.~\ref{cauchy-stress} results in the
+following definition for the second Piola-Kirchhoff stress:
+
+\begin{equation}
+  \begin{split}
+    \bS &=   2 \psi_{1} \bone
+           + 2 \psi_{2} \left(I_{1} \bone - \bC\right)
+                + 2 \psi_{3} I_{3} \bC^{-1}
+                + 2 \psi_{4f} \bff_{0}\otimes\bff_{0}
+                + 2 \psi_{4s} \bs_{0}\otimes\bs_{0}\\
+        &\quad  + \psi_{8fs} \left( \bff_{0}\otimes\bs_{0} + \bs_{0}\otimes\bff_{0} \right)
+                + \psi_{8fn} \left( \bff_{0}\otimes\bn_{0} + \bn_{0}\otimes\bff_{0} \right)
+  \end{split}
+\end{equation}
 
 %
 
