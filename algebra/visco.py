@@ -17,7 +17,7 @@ a_fs =  0.356 #kPa
 b_fs = 11.436
 
 # Material parameters for compressibility
-kappa = 2.0e6 #Kpa
+kappa = 2.0e6 #kPa
 beta = 9.0
 
 # Strain energy function in terms of the invariants of the right
@@ -38,9 +38,9 @@ F = Matrix([[1, 0, 0],
             [gamma, 1, 0],
             [0, 0, 1]])
 
-# Right Cauchy-Green tensor
-C = F.T*F
-C = (F.det())**(-Rational(2, 3))*C
+# Modified right Cauchy-Green tensor
+C = (F.det())**(-Rational(2, 3))*(F.T*F)
+
 
 # Reference fibre, sheet and sheet-normal directions
 f0 = Matrix([1, 0, 0])
