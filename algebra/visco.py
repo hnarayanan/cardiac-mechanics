@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Declare useful symbols
-I1, I2, J, I4_f, I4_s, I8_fs, I8_fn = symbols("I1, I2, J, I4_f, I4_s, I8_fs, I8_fn")
+I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar = \
+    symbols("I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar")
 gamma = symbols("gamma")
 
 # Material parameters for Figure 7 in HolzapfelOgden2009
@@ -22,10 +23,10 @@ beta = 9.0
 
 # Strain energy function in terms of the invariants of the right
 # Cauchy-Green tensor
-psi_iso =  a/(2*b)*exp(b*(I1 - 3)) \
-         + a_f/(2*b_f)*(exp(b_f*(I4_f - 1)**2) - 1) \
-         + a_s/(2*b_s)*(exp(b_s*(I4_s - 1)**2) - 1) \
-         + a_fs/(2*b_fs)*(exp(b_fs*I8_fs**2) - 1)
+psi_iso =  a/(2*b)*exp(b*(I1_bar - 3)) \
+         + a_f/(2*b_f)*(exp(b_f*(I4_f_bar - 1)**2) - 1) \
+         + a_s/(2*b_s)*(exp(b_s*(I4_s_bar - 1)**2) - 1) \
+         + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1)
 psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
 
 # Identity Matrix
@@ -39,7 +40,7 @@ F = Matrix([[1, 0, 0],
             [0, 0, 1]])
 
 # Modified right Cauchy-Green tensor
-C = (F.det())**(-Rational(2, 3))*(F.T*F)
+C_bar = (F.det())**(-Rational(2, 3))*(F.T*F)
 
 
 # Reference fibre, sheet and sheet-normal directions
@@ -48,22 +49,22 @@ s0 = Matrix([0, 1, 0])
 n0 = Matrix([0, 0, 1])
 
 # Define the second Piola-Kirchhoff stress in terms of the invariants
-S_iso =   2*(diff(psi_iso, I1) + diff(psi_iso, I2))*I - 2*diff(psi_iso, I2)*C \
-        + 2*diff(psi_iso, I4_f)*(f0*f0.T) + 2*diff(psi_iso, I4_s)*(s0*s0.T) \
-        + diff(psi_iso, I8_fs)*(f0*s0.T + s0*f0.T) \
-        + diff(psi_iso, I8_fn)*(f0*n0.T + n0*f0.T)
-S_vol = J*diff(psi_vol, J)*C.inv()
+S_iso =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I - 2*diff(psi_iso, I2_bar)*C_bar \
+        + 2*diff(psi_iso, I4_f_bar)*(f0*f0.T) + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
+        + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
+        + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
+S_vol = J*diff(psi_vol, J)*C_bar.inv()
 S = S_vol + S_iso
 
 
 # Substitute the current values of the invariants
-S = S.subs({I1: C.trace(),
-            I2: Rational(1, 2)*(I1*I1 - (C*C).trace()),
+S = S.subs({I1_bar: C_bar.trace(),
+            I2_bar: Rational(1, 2)*(I1_bar*I1_bar - (C_bar*C_bar).trace()),
             J: F.det(),
-            I4_f: (f0.T*C*f0)[0],
-            I4_s: (s0.T*C*s0)[0],
-            I8_fs: (f0.T*C*s0)[0],
-            I8_fn: (f0.T*C*n0)[0]})
+            I4_f_bar: (f0.T*C_bar*f0)[0],
+            I4_s_bar: (s0.T*C_bar*s0)[0],
+            I8_fs_bar: (f0.T*C_bar*s0)[0],
+            I8_fn_bar: (f0.T*C_bar*n0)[0]})
 
 gammas = np.arange(0, 0.51, 0.01)
 S_plot = []
