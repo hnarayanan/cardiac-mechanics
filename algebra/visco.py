@@ -57,20 +57,13 @@ S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I - 2*diff(psi_iso, 
         + 2*diff(psi_iso, I4_f_bar)*(f0*f0.T) + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
         + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
         + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
-################
-I4 = [[[[0.5*(I[a, c]*I[b, d] + I[a, d]*I[b, c])
-         for a in range(3)] for b in range(3)] for c in range(3)] for d in range(3)]
+S_bar_contract_C = sum([sum([ S_bar[a, b]*C[a, b]
+                              for a in range(3)]) for b in range(3)])
+Dev_S_bar = S_bar - Rational(1, 3)*(S_bar_contract_C)*C.inv()
 
-Proj = [[[[I4[a][b][c][d] - (1.0/3.0)*C.inv()[a, b]*C[c, d]
-           for a in range(3)] for b in range(3)] for c in range(3)] for d in range(3)]
-
-Proj_contract_S_bar = [[sum([sum([Proj[a][b][c][d]*S_bar[c, d] for c in range(3)]) for d in range(3)])
-                        for a in range(3)] for b in range(3)]
-
-S_iso = (F.det())**(-Rational(2, 3))*Matrix(Proj_contract_S_bar)
-
-################
+S_iso = (F.det())**(-Rational(2, 3))*Matrix(Dev_S_bar)
 S_vol = J*diff(psi_vol, J)*C_bar.inv()
+
 S = S_vol + S_iso
 
 # Substitute the current values of the invariants
