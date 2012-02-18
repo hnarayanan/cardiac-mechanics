@@ -74,9 +74,9 @@ def elastic_stresses(F):
 
 
 # Constants related to time stepping
-T = 1.0
+T = 10.0
 dt = T/100
-gamma_T = 0.5
+gamma_max = 0.5
 times = np.arange(dt, T + dt, dt)
 
 # Constants related to viscoelasticity
@@ -108,7 +108,7 @@ for t_n in times:
     Q_p = Q_store[-1]
 
     # Compute current strain measures
-    gamma_n = t_n/T*gamma_T
+    gamma_n = gamma_max*sin(t_n/T*float(pi))
     gamma_store.append(gamma_n)
 
     # Update stress state
@@ -118,7 +118,8 @@ for t_n in times:
     Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
     S_n = S_vol_inf_n + S_iso_inf_n + Q_n
 
-    S_n = F.subs({gamma:gamma_n})*S_n*F.subs({gamma:gamma_n}).T
+    # Convert to Cauchy stress for comparison with Dokos et al.
+    S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
 
     # Store stress state at current time
     S_vol_inf_store.append(S_vol_inf_n)
