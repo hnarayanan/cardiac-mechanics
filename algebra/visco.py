@@ -74,14 +74,20 @@ def elastic_stresses(F):
 
 
 # Constants related to time stepping
-T = 10.0
-dt = 0.1
+T = 1.0
+dt = T/100
 gamma_T = 0.5
 times = np.arange(dt, T + dt, dt)
+
+# Constants related to viscoelasticity
+tau = 1.0
+xi = -dt/tau
+beta_inf = 0.5
 
 # Initialize matrices
 S_vol_inf_store = [zeros(3)]
 S_iso_inf_store = [zeros(3)]
+Q_store = [zeros(3)]
 S_store = [0]
 gamma_store = [0.0]
 
@@ -90,6 +96,7 @@ F = Matrix([[1, 0, 0],
             [gamma, 1, 0],
             [0, 0, 1]])
 
+# Analytical values for the elastic stresses in terms of strain
 S_vol_inf, S_iso_inf = elastic_stresses(F)
 
 # Subject the body to a known strain protocol and record the stresses
@@ -98,6 +105,7 @@ for t_n in times:
     # Load previous elastic stress states
     S_vol_inf_p = S_vol_inf_store[-1]
     S_iso_inf_p = S_iso_inf_store[-1]
+    Q_p = Q_store[-1]
 
     # Compute current strain measures
     gamma_n = t_n/T*gamma_T
@@ -106,17 +114,17 @@ for t_n in times:
     # Update stress state
     S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
     S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
-    S_n = S_vol_inf_n + S_iso_inf_n # + Q_n
+    H_n = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
+    Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_n
+    S_n = S_vol_inf_n + S_iso_inf_n + Q_n
+
+    S_n = F.subs({gamma:gamma_n})*S_n*F.subs({gamma:gamma_n}).T
 
     # Store stress state at current time
     S_vol_inf_store.append(S_vol_inf_n)
     S_iso_inf_store.append(S_iso_inf_n)
+    Q_store.append(Q_n)
     S_store.append(S_n[0, 1])
-
-
-
-#    Q_n+1 = beta_inf*exp(xi)*S_iso_inf_n+1 + H_n
-#    H_n = exp(xi)*(exp(xi)*Q_n - beta_inf*S_iso_inf_n)
 
 
 plt.plot(gamma_store, S_store)
