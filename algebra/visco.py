@@ -74,7 +74,17 @@ def elastic_stresses(F):
 
     return S_vol_inf, S_iso_inf
 
-# Deformation gradient for a simple shear, gamma
+
+# Subject the body to a known strain protocol and record the stresses
+T = 10.0
+dt = 0.1
+gamma_T = 0.5
+times = np.arange(0, T + dt, dt)
+
+stresses = []
+strains = []
+
+# Deformation gradient for a simple shear
 F = Matrix([[1, 0, 0],
             [gamma, 1, 0],
             [0, 0, 1]])
@@ -82,13 +92,14 @@ F = Matrix([[1, 0, 0],
 S_vol_inf, S_iso_inf = elastic_stresses(F)
 S = S_vol_inf + S_iso_inf
 
-gammas = np.arange(0, 0.51, 0.01)
-S_plot = []
+S = F*S*F.T
 
-for _gamma in gammas:
-    S_plot.append(S[1, 0].subs({gamma:_gamma}))
+for t in times:
+    _gamma = t/T*gamma_T
+    strains.append(_gamma)
+    stresses.append(S.subs({gamma:_gamma})[1, 0])
 
-plt.plot(gammas, S_plot)
+plt.plot(strains, stresses)
 plt.xlabel("Shear strain")
 plt.ylabel("Shear stress (kPa)")
 plt.show()
