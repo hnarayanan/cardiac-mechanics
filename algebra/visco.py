@@ -29,6 +29,7 @@ psi_iso =  a/(2*b)*exp(b*(I1_bar - 3)) \
          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1)
 psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
 
+
 # Identity Matrix
 I = Matrix([[1, 0, 0],
             [0, 1, 0],
@@ -39,8 +40,11 @@ F = Matrix([[1, 0, 0],
             [gamma, 1, 0],
             [0, 0, 1]])
 
+# Right Cauchy-Green tensor
+C = F.T*F
+
 # Modified right Cauchy-Green tensor
-C_bar = (F.det())**(-Rational(2, 3))*(F.T*F)
+C_bar = (F.det())**(-Rational(2, 3))*(C)
 
 
 # Reference fibre, sheet and sheet-normal directions
@@ -49,10 +53,23 @@ s0 = Matrix([0, 1, 0])
 n0 = Matrix([0, 0, 1])
 
 # Define the second Piola-Kirchhoff stress in terms of the invariants
-S_iso =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I - 2*diff(psi_iso, I2_bar)*C_bar \
+S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I - 2*diff(psi_iso, I2_bar)*C_bar \
         + 2*diff(psi_iso, I4_f_bar)*(f0*f0.T) + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
         + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
         + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
+################
+I4 = [[[[0.5*(I[a, c]*I[b, d] + I[a, d]*I[b, c])
+         for a in range(3)] for b in range(3)] for c in range(3)] for d in range(3)]
+
+Proj = [[[[I4[a][b][c][d] - (1.0/3.0)*C.inv()[a, b]*C[c, d]
+           for a in range(3)] for b in range(3)] for c in range(3)] for d in range(3)]
+
+Proj_contract_S_bar = [[sum([sum([Proj[a][b][c][d]*S_bar[c, d] for c in range(3)]) for d in range(3)])
+                        for a in range(3)] for b in range(3)]
+
+S_iso = Matrix((F.det())**(-Rational(2, 3))*Proj_contract_S_bar)
+
+################
 S_vol = J*diff(psi_vol, J)*C_bar.inv()
 S = S_vol + S_iso
 
