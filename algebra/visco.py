@@ -34,9 +34,7 @@ psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
 # gradient
 def elastic_stresses(F):
     # Identity Matrix
-    I = Matrix([[1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]])
+    I = eye(3)
 
     # Right Cauchy-Green tensor
     C = F.T*F
@@ -75,14 +73,17 @@ def elastic_stresses(F):
     return S_vol_inf, S_iso_inf
 
 
-# Subject the body to a known strain protocol and record the stresses
+# Constants related to time stepping
 T = 10.0
 dt = 0.1
 gamma_T = 0.5
-times = np.arange(0, T + dt, dt)
+times = np.arange(dt, T + dt, dt)
 
-stresses = []
-strains = []
+# Initialize matrices
+S_vol_inf_store = [zeros(3)]
+S_iso_inf_store = [zeros(3)]
+S_store = [0]
+gamma_store = [0.0]
 
 # Deformation gradient for a simple shear
 F = Matrix([[1, 0, 0],
@@ -90,16 +91,35 @@ F = Matrix([[1, 0, 0],
             [0, 0, 1]])
 
 S_vol_inf, S_iso_inf = elastic_stresses(F)
-S = S_vol_inf + S_iso_inf
 
-S = F*S*F.T
+# Subject the body to a known strain protocol and record the stresses
+for t_n in times:
 
-for t in times:
-    _gamma = t/T*gamma_T
-    strains.append(_gamma)
-    stresses.append(S.subs({gamma:_gamma})[1, 0])
+    # Load previous elastic stress states
+    S_vol_inf_p = S_vol_inf_store[-1]
+    S_iso_inf_p = S_iso_inf_store[-1]
 
-plt.plot(strains, stresses)
+    # Compute current strain measures
+    gamma_n = t_n/T*gamma_T
+    gamma_store.append(gamma_n)
+
+    # Update stress state
+    S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
+    S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
+    S_n = S_vol_inf_n + S_iso_inf_n # + Q_n
+
+    # Store stress state at current time
+    S_vol_inf_store.append(S_vol_inf_n)
+    S_iso_inf_store.append(S_iso_inf_n)
+    S_store.append(S_n[0, 1])
+
+
+
+#    Q_n+1 = beta_inf*exp(xi)*S_iso_inf_n+1 + H_n
+#    H_n = exp(xi)*(exp(xi)*Q_n - beta_inf*S_iso_inf_n)
+
+
+plt.plot(gamma_store, S_store)
 plt.xlabel("Shear strain")
 plt.ylabel("Shear stress (kPa)")
 plt.show()
