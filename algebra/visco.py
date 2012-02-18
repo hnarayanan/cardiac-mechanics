@@ -29,12 +29,17 @@ psi_iso =  a/(2*b)*exp(b*(I1_bar - 3)) \
          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1)
 psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
 
+# Identity Matrix
+I = eye(3)
+
+# Reference fibre, sheet and sheet-normal directions
+f0 = Matrix([1, 0, 0])
+s0 = Matrix([0, 1, 0])
+n0 = Matrix([0, 0, 1])
 
 # Compute the elastic components of the stress given the deformation
 # gradient
 def elastic_stresses(F):
-    # Identity Matrix
-    I = eye(3)
 
     # Right Cauchy-Green tensor
     C = F.T*F
@@ -42,14 +47,11 @@ def elastic_stresses(F):
     # Modified right Cauchy-Green tensor
     C_bar = (F.det())**(-Rational(2, 3))*(C)
 
-    # Reference fibre, sheet and sheet-normal directions
-    f0 = Matrix([1, 0, 0])
-    s0 = Matrix([0, 1, 0])
-    n0 = Matrix([0, 0, 1])
-
     # Define the second Piola-Kirchhoff stress in terms of the invariants
-    S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I - 2*diff(psi_iso, I2_bar)*C_bar \
-            + 2*diff(psi_iso, I4_f_bar)*(f0*f0.T) + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
+    S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I \
+            - 2*diff(psi_iso, I2_bar)*C_bar \
+            + 2*diff(psi_iso, I4_f_bar)*(f0*f0.T) \
+            + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
             + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
             + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
     S_bar_contract_C = sum([sum([S_bar[a, b]*C[a, b]
@@ -81,54 +83,62 @@ times = np.arange(dt, T + dt, dt)
 
 # Constants related to viscoelasticity
 tau = 1.0
-beta_inf = 0.5
+beta_inf = 0.25
 xi = -dt/tau
 
-# Initialize matrices
-S_vol_inf_store = [zeros(3)]
-S_iso_inf_store = [zeros(3)]
-Q_store = [zeros(3)]
-S_store = [0.0]
-gamma_store = [0.0]
+# Loop over different shear directions
+directions = ['f', 's', 'n']
+for a in [0, 1, 2]:
+    for b in (set([0, 1, 2]) - set([a])):
 
-# Deformation gradient for a simple shear
-F = Matrix([[1, 0, 0],
-            [gamma, 1, 0],
-            [0, 0, 1]])
+        # Deformation gradient for a simple shear
+        F = eye(3)
+        F[a, b] += gamma
 
-# Analytical values for the elastic stresses in terms of strain
-S_vol_inf, S_iso_inf = elastic_stresses(F)
+        # Initialize matrices
+        S_vol_inf_store = [zeros(3)]
+        S_iso_inf_store = [zeros(3)]
+        Q_store = [zeros(3)]
+        S_store = [0.0]
+        gamma_store = [0.0]
 
-# Subject the body to a known strain protocol and record the stresses
-for t_n in times:
+        # Analytical values for the elastic stresses in terms of strain
+        S_vol_inf, S_iso_inf = elastic_stresses(F)
 
-    # Load previous elastic stress states
-    S_vol_inf_p = S_vol_inf_store[-1]
-    S_iso_inf_p = S_iso_inf_store[-1]
-    Q_p = Q_store[-1]
+        # Subject the body to a known strain protocol and record the stresses
+        for t_n in times:
 
-    # Compute current strain measures
-    gamma_n = gamma_max*sin(t_n/T*float(pi))
-    gamma_store.append(gamma_n)
+            # Load previous elastic stress states
+            S_vol_inf_p = S_vol_inf_store[-1]
+            S_iso_inf_p = S_iso_inf_store[-1]
+            Q_p = Q_store[-1]
 
-    # Update stress state
-    S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
-    S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
-    H_p = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
-    Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
-    S_n = S_vol_inf_n + S_iso_inf_n + Q_n
+            # Compute current strain measures
+            gamma_n = gamma_max*sin(2*t_n/T*float(pi))
+            gamma_store.append(gamma_n)
 
-    # Convert to Cauchy stress for comparison with Dokos et al.
-    S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
+            # Update stress state
+            S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
+            S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
+            H_p = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
+            Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
+            S_n = S_vol_inf_n + S_iso_inf_n + Q_n
 
-    # Store stress state at current time
-    S_vol_inf_store.append(S_vol_inf_n)
-    S_iso_inf_store.append(S_iso_inf_n)
-    Q_store.append(Q_n)
-    S_store.append(S_n[0, 1])
+            # Convert to Cauchy stress for comparison with Dokos et al.
+            S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
+
+            # Store stress state at current time
+            S_vol_inf_store.append(S_vol_inf_n)
+            S_iso_inf_store.append(S_iso_inf_n)
+            Q_store.append(Q_n)
+            S_store.append(S_n[a, b])
+
+        # Plot the current stress-strain curve
+        plt.plot(gamma_store, S_store, label='%s%s'
+                 % (directions[b], directions[a]))
 
 
-plt.plot(gamma_store, S_store)
+plt.legend(loc=(0.75, 0.59))
 plt.xlabel("Shear strain")
 plt.ylabel("Shear stress (kPa)")
 plt.show()
