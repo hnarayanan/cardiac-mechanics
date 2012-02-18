@@ -158,5 +158,6 @@ while applied_gamma <= 0.50:
     # stress = project(sigma(u)[1][2], Q) #sn
     # stress = project(sigma(u)[2][0], Q) #nf
     # stress = project(sigma(u)[2][1], Q) #ns
-    print "stress-strain:", applied_gamma, max(stress.vector().array())
+    center = (depth/2.0, width/2.0, height/2.0)
+    print "stress-strain:", applied_gamma, stress(center)
     stress_file << stress
