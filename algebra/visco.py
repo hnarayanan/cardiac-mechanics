@@ -67,12 +67,11 @@ Proj = [[[[I4[a][b][c][d] - (1.0/3.0)*C.inv()[a, b]*C[c, d]
 Proj_contract_S_bar = [[sum([sum([Proj[a][b][c][d]*S_bar[c, d] for c in range(3)]) for d in range(3)])
                         for a in range(3)] for b in range(3)]
 
-S_iso = Matrix((F.det())**(-Rational(2, 3))*Proj_contract_S_bar)
+S_iso = (F.det())**(-Rational(2, 3))*Matrix(Proj_contract_S_bar)
 
 ################
 S_vol = J*diff(psi_vol, J)*C_bar.inv()
 S = S_vol + S_iso
-
 
 # Substitute the current values of the invariants
 S = S.subs({I1_bar: C_bar.trace(),
