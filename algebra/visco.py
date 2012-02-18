@@ -81,14 +81,14 @@ times = np.arange(dt, T + dt, dt)
 
 # Constants related to viscoelasticity
 tau = 1.0
-xi = -dt/tau
 beta_inf = 0.5
+xi = -dt/tau
 
 # Initialize matrices
 S_vol_inf_store = [zeros(3)]
 S_iso_inf_store = [zeros(3)]
 Q_store = [zeros(3)]
-S_store = [0]
+S_store = [0.0]
 gamma_store = [0.0]
 
 # Deformation gradient for a simple shear
@@ -114,8 +114,8 @@ for t_n in times:
     # Update stress state
     S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
     S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
-    H_n = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
-    Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_n
+    H_p = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
+    Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
     S_n = S_vol_inf_n + S_iso_inf_n + Q_n
 
     S_n = F.subs({gamma:gamma_n})*S_n*F.subs({gamma:gamma_n}).T
