@@ -10,7 +10,7 @@ gamma = symbols("gamma")
 # Material parameters for Figure 7 in HolzapfelOgden2009
 a    =  0.500 #kPa
 b    =  8.023
-a_f  = 18.472 #kPa
+a_f  = 16.472 #kPa
 b_f  = 16.026
 a_s  =  2.481 #kPa
 b_s  = 11.120
@@ -138,7 +138,7 @@ for a in [0, 1, 2]:
                  % (directions[b], directions[a]))
 
 
-plt.legend(loc=(0.75, 0.59))
+plt.legend(loc=(0.6, 0.6))
 plt.xlabel("Shear strain")
 plt.ylabel("Shear stress (kPa)")
 plt.show()
