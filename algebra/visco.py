@@ -1,6 +1,10 @@
 from sympy import *
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rc
+
+rc('text', usetex=True)
+rc('font', family='serif')
 
 # Declare useful symbols
 I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar = \

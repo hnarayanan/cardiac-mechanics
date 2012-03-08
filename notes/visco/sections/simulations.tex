@@ -4,7 +4,18 @@
 \subsection{General algorithm}
 \label{general-algorithm}
 
-See \cite{Holzapfel:1996}, p. 3913.
+The total Second Piola Kirchhoff stress is updated as follows
+(\cite{Holzapfel:1996}, p. 3913.):
+
+\begin{itemize}
+\item Set the initial value for the stresses:
+  \begin{displaymath}
+    \bS_{\mathrm{vol}}^{\infty}|_{t = 0} = \bzero, \quad
+    \bS_{\mathrm{iso}}^{\infty}|_{t = 0} = \bzero, \quad
+    \bQ_{\alpha}|_{t = 0} = \bzero
+  \end{displaymath}
+\item For $t = {0, T}$:
+\end{itemize}
 
 \subsection{Modelling the experimental results of Dokos et al.}
 \label{simulating-experiment}
@@ -26,10 +37,10 @@ response.
   $b_{s}$     &      & 11.120\\
   $a_{fs}$    & kPa  & 0.216\\
   $b_{fs}$    &      & 11.436\\
-  $\beta$      & kPa   & 2.0e6 \\
-  $\kappa$      &      & 9.000\\
-  $\beta_{1}$  &       & 0.250\\
- $\tau_{1}$      & s     & 1.000\\
+  $\beta$     & kPa  & 2.0e6 \\
+  $\kappa$    &      & 9.000\\
+  $\beta_{1}$ &      & 0.250\\
+  $\tau_{1}$  & s    & 1.000\\
   \hline
 \end{tabular}
 
