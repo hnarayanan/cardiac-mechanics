@@ -1,8 +1,8 @@
 \section{The formulation}
 \label{formulation}
 
-\subsection{General theory}
-\label{general-theory}
+\subsection{Converting from the Cauchy stress to the Second Piola Kirchhoff stress}
+\label{reformulating-stresses}
 
 From \citep{Holzapfel:2009bb}, we have the following relationship for
 the than the Cauchy stress,
@@ -66,13 +66,21 @@ Cauchy-Green tensor, $\bC$:
   \end{split}
 \end{equation}
 
-Looking ahead, we introduce the tensor $\overline{\bC} =
-J^{-\frac{2}{3}} \bC$ with corresponding (pseudo) invariants,
-$\overline{I}_{\iota}$, and decompose the total strain energy into
-volumetric and isochoric parts.
+\subsection{General finite strain viscoelasticity theory}
+\label{general-viscoelasticity-theory}
+
+We decompose the deformation into isochoric and volumetric parts by
+introducing the  tensor $\overline{\bC} = J^{-\frac{2}{3}} \bC$, with
+corresponding (pseudo) invariants, $\overline{I}_{\iota}$. We further
+introduce a set of internal state variables, $\BGamma_{\alpha},\;
+(\alpha = 1, \ldots, m)$. In terms of these quantities, we decompose
+the total strain energy into volumetric and isochoric parts, with the
+isochoric part having a time-independent (elastic) and time-dependent
+component (viscoelastic).
 
 \begin{equation}
-  \psi = \psi_{\mathrm{vol}}(J) + \psi_{\mathrm{iso}}(\overline{\bC})
+  \psi = \psi_{\mathrm{vol}}^{\infty}(J) + \psi_{\mathrm{iso}}^{\infty}(\overline{\bC})
+       + \sum_{\alpha = 1}^{m} \gamma_{\alpha}(\overline{\bC}, \BGamma_{\alpha})
 \end{equation}
 
 \noindent We use this split to correspondingly construct a
@@ -80,18 +88,20 @@ decomposition of the total stress into volumetric and isochoric parts.
 
 \begin{equation}
   \begin{split}
-    \bS &= \bS_{\mathrm{vol}} + \bS_{\mathrm{iso}}\\
-    \bS_{\mathrm{vol}} &= J \frac{\partial \psi_{\mathrm{vol}}(J)}{\partial J} \bC^{-1}\\
-    \bS_{\mathrm{iso}} &= J^{-\frac{2}{3}} \mathrm{Dev}(\overline{\bS}) = J^{-\frac{2}{3}}
+    \bS &= \bS_{\mathrm{vol}}^{\infty} + \bS_{\mathrm{iso}}^{\infty} + \sum_{\alpha = 1}^{m} \bQ_{\alpha}\\
+    \bS_{\mathrm{vol}}^{\infty} &= J \frac{\partial \psi_{\mathrm{vol}}^{\infty}(J)}{\partial J} \bC^{-1}\\
+    \bS_{\mathrm{iso}}^{\infty} &= J^{-\frac{2}{3}} \mathrm{Dev}(\overline{\bS}) = J^{-\frac{2}{3}}
     \left[\overline{\bS} - 1/3 \left(\overline{\bS}:\bC\right)\bC^{-1}\right],
   \end{split}
+  \label{stress-decomposition}
 \end{equation}
 
-\noindent where $\overline{\bS}$ is the {\em fictitious} second
-Piola-Kirchhoff stress, defined in terms of partial derivatives of
-isochoric part of the strain energy with respect to the modified
-invariants, $\overline{\psi}_{\iota} = \frac{\partial
-  \psi_{\mathrm{iso}}}{\partial \overline{I}_{\iota}}$. Motivated by
+\noindent In Eq.~\ref{stress-decomposition}, $\overline{\bS}$ is the
+{\em fictitious} second Piola-Kirchhoff stress, defined in terms of
+partial derivatives of isochoric part of the strain energy with
+respect to the modified invariants, $\overline{\psi}_{\iota} =
+\frac{\partial \psi_{\mathrm{iso}}^{\infty}}{\partial
+  \overline{I}_{\iota}}$. Motivated by
 Eq.~\ref{second-piola-kirchhoff-stress}, it has the following form:
 
 \begin{equation}
@@ -105,7 +115,20 @@ Eq.~\ref{second-piola-kirchhoff-stress}, it has the following form:
   \end{split}
 \end{equation}
 
-\subsection{Specific forms of the strain energy function suitable the myocardium}
+\noindent And each of the internal stress-like variables,
+$\bQ_{\alpha}\; (\alpha = 1, \ldots, m)$, are governed by an ordinary
+differential equation of the form:
+
+\begin{equation}
+  \dot{\bQ_{\alpha}} + \frac{\bQ_{\alpha}}{\tau_{\alpha}} =
+  \beta_{\alpha} \dot{\bS}_{\mathrm{iso}}^{\infty}(\overline{\bC}),
+  \quad \bQ_{\alpha}|_{t=0} = \bzero,
+\end{equation}
+
+\noindent where $\tau_{\alpha}$ and $\beta_{\alpha}$ are parameters
+relating to the viscoelasticity of the material.
+
+\subsection{Specific forms of the strain energy function suitable for the myocardium}
 \label{specific-forms}
 
 The arguments in \citep{Holzapfel:2009bb} lead us to the following
@@ -121,7 +144,7 @@ strain energy function:
 energy function,
 
 \begin{equation}
-  \psi_{\mathrm{iso}} = \frac{a}{b}\exp[b(\overline{I}_{1} - 3)]
+  \psi_{\mathrm{iso}}^{\infty} = \frac{a}{b}\exp[b(\overline{I}_{1} - 3)]
        + \sum_{\iota=f, s} \frac{a_{\iota}}{2 b_{\iota}}\{\exp\left[b_{\iota}\left(\overline{I}_{4\iota} - 1\right)^{2}\right] - 1\}
        + \frac{a_{fs}}{2 b_{fs}} \left[\exp\left(b_{fs}\overline{I}_{8fs}^{2}\right) - 1\right].
 \end{equation}
@@ -130,7 +153,7 @@ energy function,
 modelling rubber-like solids \citep{Holzapfel:1996}:
 
 \begin{equation}
-  \psi_{\mathrm{vol}} = \kappa \left[\frac{1}{\beta^{2}}\left(\beta\ln J + \frac{1}{J^{\beta}} - 1\right)\right]
+  \psi_{\mathrm{vol}}^{\infty} = \kappa \left[\frac{1}{\beta^{2}}\left(\beta\ln J + \frac{1}{J^{\beta}} - 1\right)\right]
 \end{equation}
 
 
