@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Harish Narayanan
+# Copyright (C) 2012 Harish Narayanan
 
 # Library imports and settings
 from dolfin import *
@@ -20,61 +20,71 @@ height = 1
 n = 5
 mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
 
-# Material parameters
-# Figure 7
-a    = Constant(0.059)  #kPa
-b    = Constant(8.023)
-a_f  = Constant(18.472) #kPa
-b_f  = Constant(16.026)
-a_s  = Constant(2.481)  #kPa
-b_s  = Constant(11.120)
-a_fs = Constant(0.216)  #kPa
-b_fs = Constant(11.436)
-p    = Constant(0.059)  #kPa
-
 # Reference fibre, sheet and sheet-normal directions
 f0 = Constant((1, 0, 0))
 s0 = Constant((0, 1, 0))
 n0 = Constant((0, 0, 1))
 
-# Define the material
+# Material parameters for Figure 7 in HolzapfelOgden2009
+a    =  Constant(0.500)   #kPa
+b    =  Constant(8.023)
+a_f  =  Constant(16.472)  #kPa
+b_f  =  Constant(16.026)
+a_s  =  Constant(2.481)   #kPa
+b_s  =  Constant(11.120)
+a_fs =  Constant(0.356)   #kPa
+b_fs =  Constant(11.436)
+
+# Material parameters for compressibility
+kappa = Constant(2.0e6)   #kPa
+beta  = Constant(9.0)
+
+# Strain energy functions for the passive myocardium
+def psi_iso_inf(I1_bar, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar):
+    return(a/(2*b)*exp(b*(I1_bar - 3)) \
+          + a_f/(2*b_f)*(exp(b_f*(I4_f_bar - 1)**2) - 1) \
+          + a_s/(2*b_s)*(exp(b_s*(I4_s_bar - 1)**2) - 1) \
+          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1))
+
+def psi_vol_inf(J):
+    return(kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1)))
+
+# Define the elastic response of the material
 def P(u):
+    # Kinematics
     I = Identity(u.cell().d)    # Identity tensor
     F = I + grad(u)             # Deformation gradient
     C = F.T*F                   # Right Cauchy-Green tensor
+    J = variable(det(F))        # Jacobian
+    C_bar = J**(-2.0/3.0)*C     # Modified right Cauchy-Green tensor
 
     # Principle isotropic invariants
-    I1 = variable(tr(C))
-    I2 = variable(0.5*(tr(C)**2 - tr(C*C)))
+    I1_bar = variable(tr(C))
+    I2_bar = variable(0.5*(tr(C)**2 - tr(C*C)))
 
     # Anisotropic (quasi) invariants
-    I4_f = variable(inner(f0, C*f0))
-    I4_s = variable(inner(s0, C*s0))
-    I8_fs = variable(inner(f0, C*s0))
-    I8_fn = variable(inner(f0, C*n0))
+    I4_f_bar = variable(inner(f0, C_bar*f0))
+    I4_s_bar = variable(inner(s0, C_bar*s0))
+    I8_fs_bar = variable(inner(f0, C_bar*s0))
+    I8_fn_bar = variable(inner(f0, C_bar*n0))
 
-    # Current fibre, sheet and sheet-normal directions
-    f = F*f0
-    s = F*s0
-    n = F*n0
-
-    # Strain energy function in terms of the invariants of the right
-    # Cauchy-Green tensor
-    psi_iso =  a/(2*b)*exp(b*(I1 - 3)) \
-        + a_f/(2*b_f)*(exp(b_f*(I4_f - 1)**2) - 1) \
-        + a_s/(2*b_s)*(exp(b_s*(I4_s - 1)**2) - 1) \
-        + a_fs/(2*b_fs)*(exp(b_fs*I8_fs**2) - 1)
+    # Strain energy functions
+    psi_iso = psi_iso_inf(I1_bar, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar)
+    psi_vol = psi_vol_inf(J)
 
     # Define the second Piola-Kirchhoff stress in terms of the invariants
-    S =   2*(diff(psi_iso, I1) + diff(psi_iso, I2))*I \
-        - 2*diff(psi_iso, I2)*C \
-        + 2*diff(psi_iso, I4_f)*outer(f0, f0) \
-        + 2*diff(psi_iso, I4_s)*outer(s0, s0) \
-        + diff(psi_iso, I8_fs)*(outer(f0, s0) + outer(s0, f0)) \
-        + diff(psi_iso, I8_fn)*(outer(f0, n0) + outer(n0, f0))
+    S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I \
+            - 2*diff(psi_iso, I2_bar)*C_bar \
+            + 2*diff(psi_iso, I4_f_bar)*outer(f0, f0) \
+            + 2*diff(psi_iso, I4_s_bar)*outer(s0, s0) \
+            + diff(psi_iso, I8_fs_bar)*(outer(f0, s0) + outer(s0, f0)) \
+            + diff(psi_iso, I8_fn_bar)*(outer(f0, n0) + outer(n0, f0))
+    Dev_S_bar = S_bar - (1.0/3.0)*inner(S_bar, C)*inv(C)
+    S_iso_inf = J**(-2.0/3.0)*Dev_S_bar
+    S_vol_inf = J*diff(psi_vol, J)*inv(C)
 
     # Return the first Piola-Kirchhoff stress
-    return (F*S)
+    return (F*(S_iso_inf + S_vol_inf))
 
 def sigma(u):
     I = Identity(u.cell().d)
