@@ -1,10 +1,38 @@
 \section{Representative numerical simulations}
 \label{numerical-simulations}
 
-Some simple analytical and numerical solutions go here. Will be
-fit/compared to the results from Dokos et al.
+\subsection{General algorithm}
+\label{general-algorithm}
 
-\clearpage
+See \cite{Holzapfel:1996}, p. 3913.
+
+\subsection{Modelling the experimental results of Dokos et al.}
+\label{simulating-experiment}
+
+We want to fit/compare our results with \cite{Dokos:2002}. For this,
+we start with parameters from \cite{Holzapfel:2009bb}, Table 1 and
+introduce additional parameters for the volumetric and viscoelastic
+response.
+
+\begin{tabular}{| c | c | r | }
+  \hline
+  Parameter & Unit & Value\\
+  \hline
+  $a$         & kPa  & 0.059\\
+  $b$         &      & 8.023\\
+  $a_{f}$     & kPa  & 18.472\\
+  $b_{f}$     &      & 16.026\\
+  $a_{s}$     & kPa  & 2.481\\
+  $b_{s}$     &      & 11.120\\
+  $a_{fs}$    & kPa  & 0.216\\
+  $b_{fs}$    &      & 11.436\\
+  $\beta$      & kPa   & 2.0e6 \\
+  $\kappa$      &      & 9.000\\
+  $\beta_{1}$  &       & 0.250\\
+ $\tau_{1}$      & s     & 1.000\\
+  \hline
+\end{tabular}
+
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]
