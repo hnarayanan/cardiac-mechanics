@@ -1,6 +1,9 @@
 \section{The formulation}
 \label{formulation}
 
+\subsection{General theory}
+\label{general-theory}
+
 From \citep{Holzapfel:2009bb}, we have the following relationship for
 the than the Cauchy stress,
 
@@ -65,11 +68,31 @@ Cauchy-Green tensor, $\bC$:
 
 Looking ahead, we introduce the tensor $\overline{\bC} =
 J^{-\frac{2}{3}} \bC$ with corresponding (pseudo) invariants,
-$\overline{I}_{\iota}$, and partial derivatives of strain energy,
-$\overline{\psi}_{\iota} = \frac{\partial \psi}{\partial
-  \overline{I}_{\iota}}$. In terms of these quantities, let us define
-the {\em fictitious} second Piola-Kirchhoff stress motivated by
-Eq.~\ref{second-piola-kirchhoff-stress}:
+$\overline{I}_{\iota}$, and decompose the total strain energy into
+volumetric and isochoric parts.
+
+\begin{equation}
+  \psi = \psi_{\mathrm{vol}}(J) + \psi_{\mathrm{iso}}(\overline{\bC})
+\end{equation}
+
+\noindent We use this split to correspondingly construct a
+decomposition of the total stress into volumetric and isochoric parts.
+
+\begin{equation}
+  \begin{split}
+    \bS &= \bS_{\mathrm{vol}} + \bS_{\mathrm{iso}}\\
+    \bS_{\mathrm{vol}} &= J \frac{\partial \psi_{\mathrm{vol}}(J)}{\partial J} \bC^{-1}\\
+    \bS_{\mathrm{iso}} &= J^{-\frac{2}{3}} \mathrm{Dev}(\overline{\bS}) = J^{-\frac{2}{3}}
+    \left[\overline{\bS} - 1/3 \left(\overline{\bS}:\bC\right)\bC^{-1}\right],
+  \end{split}
+\end{equation}
+
+\noindent where $\overline{\bS}$ is the {\em fictitious} second
+Piola-Kirchhoff stress, defined in terms of partial derivatives of
+isochoric part of the strain energy with respect to the modified
+invariants, $\overline{\psi}_{\iota} = \frac{\partial
+  \psi_{\mathrm{iso}}}{\partial \overline{I}_{\iota}}$. Motivated by
+Eq.~\ref{second-piola-kirchhoff-stress}, it has the following form:
 
 \begin{equation}
   \begin{split}
@@ -82,27 +105,32 @@ Eq.~\ref{second-piola-kirchhoff-stress}:
   \end{split}
 \end{equation}
 
-\noindent We use this fictitious stress to construct a decomposition
-of the total stress into volumetric and isochoric parts.
-
-\begin{equation}
-  \begin{split}
-    \bS &= \bS_{\mathrm{vol}} + \bS_{\mathrm{iso}}\\
-    \bS_{\mathrm{vol}} &= J \frac{\partial \psi_{\mathrm{vol}}(J)}{\partial J} \bC^{-1}\\
-    \bS_{\mathrm{iso}} &= J^{-\frac{2}{3}} \mathbb{P}:\overline{\bS},\; \mathrm{where}\; \mathbb{P} = \mathbb{I} - \frac{1}{3} \bC^{-1}\otimes\bC
-  \end{split}
-\end{equation}
-
-
-
-%                        + 2 \overline{\psi}_{3} I_{3} \bC^{-1}
-
+\subsection{Specific forms of the strain energy function suitable the myocardium}
+\label{specific-forms}
 
 The arguments in \citep{Holzapfel:2009bb} lead us to the following
 strain energy function:
 
 \begin{equation}
-  \psi = \frac{a}{b}\exp[b(I_{1} - 3)] + \frac{a_f}{2 b_f}
+  \psi = \frac{a}{b}\exp[b(I_{1} - 3)]
+       + \sum_{\iota=f, s} \frac{a_{\iota}}{2 b_{\iota}}\{\exp\left[b_{\iota}\left(I_{4\iota} - 1\right)^{2}\right] - 1\}
+       + \frac{a_{fs}}{2 b_{fs}} \left[\exp\left(b_{fs}I_{8fs}^{2}\right) - 1\right]
+\end{equation}
+
+\noindent We use this to define the isochoric part of our strain
+energy function,
+
+\begin{equation}
+  \psi_{\mathrm{iso}} = \frac{a}{b}\exp[b(\overline{I}_{1} - 3)]
+       + \sum_{\iota=f, s} \frac{a_{\iota}}{2 b_{\iota}}\{\exp\left[b_{\iota}\left(\overline{I}_{4\iota} - 1\right)^{2}\right] - 1\}
+       + \frac{a_{fs}}{2 b_{fs}} \left[\exp\left(b_{fs}\overline{I}_{8fs}^{2}\right) - 1\right].
+\end{equation}
+
+\noindent For the volumetric part, we use a form commonly used when
+modelling rubber-like solids \citep{Holzapfel:1996}:
+
+\begin{equation}
+  \psi_{\mathrm{vol}} = \kappa \left[\frac{1}{\beta^{2}}\left(\beta\ln J + \frac{1}{J^{\beta}} - 1\right)\right]
 \end{equation}
 
 
