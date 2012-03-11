@@ -86,9 +86,9 @@ gamma_max = 0.5
 times = np.arange(dt, T + dt, dt)
 
 # Constants related to viscoelasticity
-tau = 1.0
+tau = 0.5
 beta_inf = 0.25
-xi = -dt/tau
+xi = -dt/(2*tau)
 
 # Loop over different shear directions
 directions = ['f', 's', 'n']
