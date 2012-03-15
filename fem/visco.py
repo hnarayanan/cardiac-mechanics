@@ -59,8 +59,8 @@ def P(u):
     C_bar = J**(-2.0/3.0)*C     # Modified right Cauchy-Green tensor
 
     # Principle isotropic invariants
-    I1_bar = variable(tr(C))
-    I2_bar = variable(0.5*(tr(C)**2 - tr(C*C)))
+    I1_bar = variable(tr(C_bar))
+    I2_bar = variable(0.5*(tr(C_bar)**2 - tr(C_bar*C_bar)))
 
     # Anisotropic (quasi) invariants
     I4_f_bar = variable(inner(f0, C_bar*f0))
@@ -168,6 +168,6 @@ while applied_gamma <= 0.50:
     # stress = project(sigma(u)[1][2], Q) #sn
     # stress = project(sigma(u)[2][0], Q) #nf
     # stress = project(sigma(u)[2][1], Q) #ns
-    center = (depth/2.0, width/2.0, height/2.0)
-    print "stress-strain:", applied_gamma, stress(center)
+#    center = (depth/2.0, width/2.0, height/2.0)
+#    print "stress-strain:", applied_gamma, stress(center)
     stress_file << stress
