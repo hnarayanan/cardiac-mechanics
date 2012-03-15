@@ -11,19 +11,13 @@ I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar = \
     symbols("I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar")
 gamma = symbols("gamma")
 
-# Material parameters for Figure 7 in HolzapfelOgden2009
-a    =  0.500 #kPa
-b    =  8.023
-a_f  = 16.472 #kPa
-b_f  = 16.026
-a_s  =  2.481 #kPa
-b_s  = 11.120
-a_fs =  0.356 #kPa
-b_fs = 11.436
+a, b, a_f, b_f, a_s, b_s, a_fs, b_fs = \
+    symbols('a, b, a_f, b_f, a_s, b_s, a_fs, b_fs')
+kappa, beta = symbols('kappa, beta')
 
-# Material parameters for compressibility
-kappa = 2.0e6 #kPa
-beta = 9.0
+material_parameters = {a: 0.500, b: 8.023, a_f: 16.472, b_f: 16.026, \
+                       a_s: 2.481, b_s: 11.120, a_fs: 0.356, b_fs: 11.436, \
+                       kappa: 2.0e6, beta:9.0}
 
 # Strain energy function in terms of the invariants of the right
 # Cauchy-Green tensor
@@ -58,6 +52,7 @@ def elastic_stresses(F):
             + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
             + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
             + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
+    print(S_bar)
     S_bar_contract_C = sum([sum([S_bar[a, b]*C[a, b]
                                  for a in range(3)]) for b in range(3)])
     Dev_S_bar = S_bar - Rational(1, 3)*(S_bar_contract_C)*C.inv()
@@ -66,13 +61,14 @@ def elastic_stresses(F):
     S_vol_inf = J*diff(psi_vol, J)*C.inv()
 
     # Substitute the current values of the invariants
-    substitutions = {I1_bar: C_bar.trace(),
+    kinematics = {I1_bar: C_bar.trace(),
                      I2_bar: Rational(1, 2)*(I1_bar*I1_bar - (C_bar*C_bar).trace()),
                      J: F.det(),
                      I4_f_bar: (f0.T*C_bar*f0)[0],
                      I4_s_bar: (s0.T*C_bar*s0)[0],
                      I8_fs_bar: (f0.T*C_bar*s0)[0],
                      I8_fn_bar: (f0.T*C_bar*n0)[0]}
+    substitutions = dict(kinematics.items() + material_parameters.items())
     S_vol_inf = S_vol_inf.subs(substitutions)
     S_iso_inf = S_iso_inf.subs(substitutions)
 
