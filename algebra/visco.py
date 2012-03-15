@@ -52,7 +52,6 @@ def elastic_stresses(F):
             + 2*diff(psi_iso, I4_s_bar)*(s0*s0.T) \
             + diff(psi_iso, I8_fs_bar)*(f0*s0.T + s0*f0.T) \
             + diff(psi_iso, I8_fn_bar)*(f0*n0.T + n0*f0.T)
-    print(S_bar)
     S_bar_contract_C = sum([sum([S_bar[a, b]*C[a, b]
                                  for a in range(3)]) for b in range(3)])
     Dev_S_bar = S_bar - Rational(1, 3)*(S_bar_contract_C)*C.inv()
