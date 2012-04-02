@@ -4,7 +4,7 @@
 from dolfin import *
 from numpy import array
 
-parameters["form_compiler"]["cpp_optimize"] = True
+parameters["form_compiler"]["name"] = "sfc"
 ffc_options = {
     "quadrature_degree": 5,
     "eliminate_zeros": True,
@@ -36,7 +36,7 @@ a_fs =  Constant(0.356)   #kPa
 b_fs =  Constant(11.436)
 
 # Material parameters for compressibility
-kappa = Constant(2.0e6)   #kPa
+kappa = Constant(2.0e3)   #kPa
 beta  = Constant(9.0)
 
 # Strain energy functions for the passive myocardium
@@ -158,8 +158,7 @@ applied_gamma = 0.0
 
 while applied_gamma <= 0.50:
     shear.gamma = applied_gamma
-    solve(F == 0, u, bcs, J=J,
-          form_compiler_parameters=ffc_options)
+    solve(F == 0, u, bcs, J=J)
     applied_gamma = applied_gamma + 0.01
     displacement_file << u
     stress = project(sigma(u)[0][1], Q) #fs
@@ -168,6 +167,6 @@ while applied_gamma <= 0.50:
     # stress = project(sigma(u)[1][2], Q) #sn
     # stress = project(sigma(u)[2][0], Q) #nf
     # stress = project(sigma(u)[2][1], Q) #ns
-#    center = (depth/2.0, width/2.0, height/2.0)
-#    print "stress-strain:", applied_gamma, stress(center)
+    center = (depth/2.0, width/2.0, height/2.0)
+    print "stress-strain:", applied_gamma, stress(center)
     stress_file << stress
