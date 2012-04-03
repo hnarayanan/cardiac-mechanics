@@ -5,18 +5,6 @@ from dolfin import *
 from numpy import array, arange
 parameters["form_compiler"]["name"] = "sfc"
 
-# Dimensions and mesh density of the domain
-width = 1
-depth = 1
-height = 1
-n = 10
-mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
-
-# Reference fibre, sheet and sheet-normal directions
-f0 = Constant((1, 0, 0))
-s0 = Constant((0, 1, 0))
-n0 = Constant((0, 0, 1))
-
 # Material parameters for Figure 7 in HolzapfelOgden2009
 a    =  Constant(0.500)   #kPa
 b    =  Constant(8.023)
@@ -31,15 +19,32 @@ b_fs =  Constant(11.436)
 kappa = Constant(2.0e3)   #kPa
 beta  = Constant(9.0)
 
+# Parameters related to time-stepping
+T = 10.0
+dt = T/100
+gamma_max = 0.5
+
+# Parameters related to viscoelasticity
+tau = 0.5
+beta_inf = 0.25
+xi = -dt/(2*tau)
+
 # Strain energy functions for the passive myocardium
+# Isochoric part
 def psi_iso_inf(I1_bar, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar):
-   return(a/(2*b)*exp(b*(I1_bar - 3)) \
+    return(a/(2*b)*exp(b*(I1_bar - 3)) \
          + a_f/(2*b_f)*(exp(b_f*(I4_f_bar - 1)**2) - 1) \
          + a_s/(2*b_s)*(exp(b_s*(I4_s_bar - 1)**2) - 1) \
          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1))
 
+# Volumetric part
 def psi_vol_inf(J):
     return(kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1)))
+
+# Reference fibre, sheet and sheet-normal directions
+f0 = Constant((1, 0, 0))
+s0 = Constant((0, 1, 0))
+n0 = Constant((0, 0, 1))
 
 # Define kinematic measures in terms of the displacement
 def kinematics(u):
@@ -92,25 +97,31 @@ def S_vol_inf(u):
     S_vol_inf = J*diff(psi_vol, J)*inv(C)
     return(S_vol_inf)
 
-# First Piola-Kirchhoff stress
-def P(u):
-    # Define useful kinematic measures
-    [I, F, C, J, C_bar, I1_bar, I2_bar, \
-     I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar] = kinematics(u)
-    return (F*(S_iso_inf(u) + S_vol_inf(u)))
-
 # Cauchy stress
 def sigma(u):
     [I, F, C, J, C_bar, I1_bar, I2_bar, \
      I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar] = kinematics(u)
     return(1/J*P(u)*F.T)
 
+# Dimensions and mesh density of the domain
+width = 1
+depth = 1
+height = 1
+n = 10
+mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
+
 # Function spaces
-V = VectorFunctionSpace(mesh, "Lagrange", 1)
-Q = FunctionSpace(mesh, "Lagrange", 1)
-du = TrialFunction(V)            # Incremental displacement
-v  = TestFunction(V)             # Test function
-u  = Function(V)                 # Displacement from previous iteration
+scalar = FunctionSpace(mesh, "Lagrange", 1)
+vector = VectorFunctionSpace(mesh, "Lagrange", 1)
+tensor = TensorFunctionSpace(mesh, "Lagrange", 1)
+
+# Functions
+du = TrialFunction(vector)            # Incremental displacement
+v  = TestFunction(vector)             # Test function
+u  = Function(vector)                 # Displacement from previous iteration
+S_iso_inf_p = Function(tensor)
+S_vol_inf_p = Function(tensor)
+Q_p = Function(tensor)
 
 # Boundary conditions
 back_condition   = "x[0] == 0.0 && on_boundary"
@@ -126,86 +137,64 @@ bottom, top = compile_subdomains([bottom_condition, top_condition])
 
 hold = Expression(("0.0", "0.0", "0.0"))
 
-# fs
+# Simple shear along the fs plane
 shear = Expression(("0.0", "gamma*depth", "0.0"), gamma=0.0, depth=depth)
-hold_back = DirichletBC(V, hold, back)
-shear_front = DirichletBC(V, shear, front)
+hold_back = DirichletBC(vector, hold, back)
+shear_front = DirichletBC(vector, shear, front)
 bcs = [hold_back, shear_front]
 
-# Define the problem in variational form
-F = inner(P(u), grad(v))*dx
-J = derivative(F, u, du)
+# Create files to store output
+u_store = TimeSeries("../output/visco/u")
+S_vol_inf_store = TimeSeries("../output/visco/S_vol_inf")
+S_iso_inf_store = TimeSeries("../output/visco/S_iso_inf")
+Q_store = TimeSeries("../output/visco/Q")
 
-# Constants related to time stepping
-T = 10.0
-dt = T/100
-gamma_max = 0.5
+# And store initial values
+u_store.store(u.vector(), 0.0)
+S_iso_inf_store.store(S_iso_inf_p.vector(), 0.0)
+S_vol_inf_store.store(S_vol_inf_p.vector(), 0.0)
+Q_store.store(Q_p.vector(), 0.0)
+
+# Define the time range
 times = arange(dt, T + dt, dt)
 
-#displacement_file = File("../output/displacement.pvd")
-#stress_file = File("../output/stress.pvd")
-visco_series = TimeSeries("../output/visco")
-applied_gamma = 0.0
-
+# Subject the body to a known strain protocol and record the stresses
 for t_n in times:
 
+    # Load previous elastic stress states
+    t_p = t_n - dt
+    S_vol_inf_store.retrieve(S_vol_inf_p.vector(), t_p)
+    S_iso_inf_store.retrieve(S_iso_inf_p.vector(), t_p)
+    Q_store.retrieve(Q_p.vector(), t_p)
+
+    # Compute current shear strain and update the boundary condition
     gamma_n = gamma_max*sin(2*t_n/T*float(pi))
     shear.gamma = gamma_n
+
+    # Update stress state
+    S_vol_inf_n = S_vol_inf(u)
+    S_iso_inf_n = S_iso_inf(u)
+    H_p = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
+    Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
+    S_n = S_vol_inf_n + S_iso_inf_n + Q_n
+
+    # Define the variational form for the problem
+    F = inner((Identity(u.cell().d) + grad(u))*S_n, grad(v))*dx
+    J = derivative(F, u, du)
+
+    # Solve the boundary value problem
     solve(F == 0, u, bcs, J=J)
-    visco_series.store(u.vector(), t_n)
 
-#    displacement_file << u
-#    stress = project(sigma(u)[0][1], Q) #fs
-    # stress = project(sigma(u)[0][2], Q) #fn
-    # stress = project(sigma(u)[1][0], Q) #sf
-    # stress = project(sigma(u)[1][2], Q) #sn
-    # stress = project(sigma(u)[2][0], Q) #nf
-    # stress = project(sigma(u)[2][1], Q) #ns
-#   center = (depth/2.0, width/2.0, height/2.0)
-#    print "stress-strain:", applied_gamma, stress(center)
-#    stress_file << stress
+    # Project the stress states to the tensor function space
+    S_iso_inf_n = project(S_iso_inf(u), tensor)
+    S_vol_inf_n = project(S_vol_inf(u), tensor)
+    Q_n = project(Q_n, tensor)
 
+    # Store the displacement and stress state at current time
+    u_store.store(u.vector(), t_n)
+    S_iso_inf_store.store(S_iso_inf_n.vector(), t_n)
+    S_vol_inf_store.store(S_vol_inf_n.vector(), t_n)
+    Q_store.store(Q_n.vector(), t_n)
 
-
-
-
-
-
-# fn
-# shear = Expression(("0.0", "0.0", "gamma*depth"), gamma=0.0, depth=depth)
-# hold_back = DirichletBC(V, hold, back)
-# shear_front = DirichletBC(V, shear, front)
-# bcs = [hold_back, shear_front]
-
-# sf
-# shear = Expression(("gamma*width", "0.0", "0.0"), gamma=0.0, width=width)
-# hold_left = DirichletBC(V, hold, left)
-# shear_right = DirichletBC(V, shear, right)
-# bcs = [hold_left, shear_right]
-
-# sn
-# shear = Expression(("0.0", "0.0", "gamma*width"), gamma=0.0, width=width)
-# hold_left = DirichletBC(V, hold, left)
-# shear_right = DirichletBC(V, shear, right)
-# bcs = [hold_left, shear_right]
-
-# nf
-# shear = Expression(("gamma*height", "0.0", "0.0"), gamma=0.0, height=height)
-# hold_bottom = DirichletBC(V, hold, bottom)
-# shear_top = DirichletBC(V, shear, top)
-# bcs = [hold_bottom, shear_top]
-
-# nf
-# shear = Expression(("0.0", "gamma*height", "0.0"), gamma=0.0, height=height)
-# hold_bottom = DirichletBC(V, hold, bottom)
-# shear_top = DirichletBC(V, shear, top)
-# bcs = [hold_bottom, shear_top]
-
-
-# ffc_options = {
-#     "quadrature_degree": 5,
-#     "eliminate_zeros": True,
-#     "precompute_basis_const": True,
-#     "precompute_ip_const": True
-#     # "optimize": True
-# }
+    # Convert to Cauchy stress for comparison with Dokos et al.
+#    S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
