@@ -1,11 +1,12 @@
 from sympy import *
+from sympy.printing import print_ccode
 
 # Declare useful symbols
 I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar = \
     symbols("I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar")
 
 a, b, a_f, b_f, a_s, b_s, a_fs, b_fs, kappa, beta = \
-symbols("a, b, a_f, b_f, a_s, b_s, a_fs, b_fs, kappa, beta")
+symbols("a_pt, b_pt, a_f_pt, b_f_pt, a_s_pt, b_s_pt, a_fs_pt, b_fs_pt, kappa_pt, beta_pt")
 
 # Strain energy function in terms of the invariants of the right
 # Cauchy-Green tensor
@@ -27,11 +28,6 @@ n0 = Matrix([0, 0, 1])
 # gradient
 def elastic_stresses(C):
 
-    # Right Cauchy-Green tensor
-    #    C = F.T*F
-
-#    J_mine = sqrt(C.det())
-
     # Modified right Cauchy-Green tensor
     C_bar = J**(-Rational(2, 3))*(C)
 
@@ -50,15 +46,13 @@ def elastic_stresses(C):
     S_vol_inf = J*diff(psi_vol, J)*C.inv()
 
     # Substitute the current values of the invariants
-    substitutions = {I1_bar: C_bar.trace(),
-                     I2_bar: Rational(1, 2)*(I1_bar*I1_bar - (C_bar*C_bar).trace()),
-                     J: sqrt(C.det()),
-                     I4_f_bar: (f0.T*C_bar*f0)[0],
-                     I4_s_bar: (s0.T*C_bar*s0)[0],
-                     I8_fs_bar: (f0.T*C_bar*s0)[0],
-                     I8_fn_bar: (f0.T*C_bar*n0)[0]}
-    S_vol_inf = S_vol_inf.subs(substitutions)
-    S_iso_inf = S_iso_inf.subs(substitutions)
+    substitutions = {I8_fn_bar: (f0.T*C_bar*n0)[0]}
+    print_ccode(C_bar.trace(), assign_to="real I1_bar")
+    print_ccode(Rational(1, 2)*(I1_bar*I1_bar - (C_bar*C_bar).trace()), assign_to="real I2_bar")
+    print_ccode((f0.T*C_bar*f0)[0], assign_to="real I4_f_bar")
+    print_ccode((s0.T*C_bar*s0)[0], assign_to="real I4_s_bar")
+    print_ccode((f0.T*C_bar*s0)[0], assign_to="real I8_fs_bar")
+    print_ccode((f0.T*C_bar*n0)[0], assign_to="real I8_fn_bar")
 
     return S_vol_inf, S_iso_inf
 
@@ -70,14 +64,12 @@ C = Matrix([[c11, c12, c13],
             [c31, c32, c33]])
 
 S_vol_inf, S_iso_inf = elastic_stresses(C)
-from sympy.printing import print_ccode
+
 
 for i in range(3):
     for j in range(3):
-        print "S_loc_iso(%i, %i) = " % (i + 1, j + 1)
-        print_ccode(S_iso_inf[i, j])
+        print_ccode(S_iso_inf[i, j], assign_to="S_loc_iso(%i, %i)" % (i + 1, j + 1))
 
 for i in range(3):
     for j in range(3):
-        print "S_loc_vol(%i, %i) = " % (i + 1, j + 1)
-        print_ccode(S_vol_inf[i, j])
+        print_ccode(S_vol_inf[i, j], assign_to="S_loc_vol(%i, %i)" % (i + 1, j + 1))
