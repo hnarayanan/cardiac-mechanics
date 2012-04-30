@@ -26,6 +26,7 @@ psi_iso =  a/(2*b)*exp(b*(I1_bar - 3)) \
          + a_s/(2*b_s)*(exp(b_s*(I4_s_bar - 1)**2) - 1) \
          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1)
 psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
+# psi_vol = kappa*(J*ln(J) - J + 1)
 
 # Identity Matrix
 I = eye(3)
