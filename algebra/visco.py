@@ -76,13 +76,13 @@ def elastic_stresses(F):
 
 
 # Constants related to time stepping
-T = 10.0
+T = 30.0
 dt = T/100
 gamma_max = 0.5
 times = np.arange(dt, T + dt, dt)
 
 # Constants related to viscoelasticity
-tau = 0.5
+tau = 1.5
 beta_inf = 0.25
 xi = -dt/(2*tau)
 
