@@ -72,15 +72,15 @@ def sigma(u, gamma):
     psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
 
     # Cauchy stress
-    return(  (a*exp(b*(I1 - 3))*B_e + 2*I3*diff(psi_vol, J)*I \
+    return(  a*exp(b*(I1 - 3))*B_e + 2*I3*diff(psi_vol, J)*I \
            + 2*a_f*(I4_f - 1)*exp(b_f*(I4_f - 1)**2)*outer(f, f) \
            + 2*a_s*(I4_s - 1)*exp(b_s*(I4_s - 1)**2)*outer(s, s) \
-           + a_fs*I8_fs*exp(b_fs*I8_fs**2)*(outer(f, s) + outer(s, f)))/J)
+           + a_fs*I8_fs*exp(b_fs*I8_fs**2)*(outer(f, s) + outer(s, f)))
 
 def P(u, gamma):
     I = Identity(u.cell().d)
     F = I + grad(u)
-    return(det(F)*sigma(u, gamma)*inv(F).T)
+    return(sigma(u, gamma)*inv(F).T)
 
 # Function spaces
 V = VectorFunctionSpace(mesh, "Lagrange", 1)
