@@ -5,6 +5,14 @@ sizeConstants = 5
 from math import *
 from numpy import *
 
+lmbda = 1.50
+beta = 50.0
+C_0 = -13.723
+C_1 = 19.807
+beta_0 = C_0 + C_1/lmbda
+
+k_1 = beta**4/(beta**4 + beta_0**4)
+
 def createLegends():
     legend_states = [""] * sizeStates
     legend_rates = [""] * sizeStates
@@ -46,7 +54,8 @@ def initConsts():
 
 def computeRates(voi, states, constants):
     rates = [0.0] * sizeStates; algebraic = [0.0] * sizeAlgebraic
-    algebraic[0] = custom_piecewise([greater_equal(voi , 0.00000) & less(voi , 5.00000), 0.550000 , True, 0.300000])
+    # algebraic[0] = custom_piecewise([greater_equal(voi , 0.00000) & less(voi , 5.00000), 0.550000 , True, 0.300000])
+    algebraic[0] = k_1
     rates[0] = -(algebraic[0]*states[0])+constants[0]*states[2]+constants[1]*states[1]
     rates[2] = constants[3]*states[3]+algebraic[0]*states[0]-(constants[0]+constants[2])*states[2]
     algebraic[3] = algebraic[0]
@@ -102,7 +111,7 @@ def plot_model(voi, states, algebraic):
     import pylab
     (legend_states, legend_algebraic, legend_voi, legend_constants) = createLegends()
     pylab.figure(1)
-    pylab.plot(voi,vstack((states,algebraic)).T)
+    pylab.plot(voi,vstack((states,algebraic)).T[:, 0:4])
     pylab.xlabel(legend_voi)
     pylab.legend(legend_states + legend_algebraic, loc='best')
     pylab.show()
