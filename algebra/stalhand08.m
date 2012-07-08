@@ -1,9 +1,11 @@
+1;
+
 clear all;
 clc;
 
 # Define system level parameters
-global q_1 = 1.0;
-global q_2 = 1.0;
+global q_1 = 10.0;
+global q_2 = 10.0;
 global f_1 = 1.3;
 global f_2 = 85.5;
 global E_1 = 12.5;
@@ -12,10 +14,12 @@ global lambda_opt = 1.4;
 global v = 5;
 global xi = 1/sqrt(2);
 
+global lambda = 1.2;
+global beta = 1.1;
+
 function alpha_dot = hai_murphy_98(alpha, t)
 
-  global lambda;
-  global beta;
+  global lambda, global beta;
 
   C_0 = -13.723;
   C_1 = 19.807;
@@ -64,7 +68,6 @@ function lambda_a_dot = stalhand_08(lambda_a, t)
   global xi;
   lambda_c = lambda/lambda_a;
 
-
   lambda_a_dot = (-alpha_steady(3)*f_1*v*exp(-(lambda_a - lambda_opt)**2/(2*xi**2)) + (2*lambda_a - 2*lambda_opt)*(lambda_c - 1)**2*(E_1*alpha_steady(3)/2 + E_2*alpha_steady(4)/2)*exp(-(lambda_a - lambda_opt)**2/(2*xi**2))/(2*xi**2) + lambda_c*(2*lambda_c - 2)*(E_1*alpha_steady(3)/2 + E_2*alpha_steady(4)/2)*exp(-(lambda_a - lambda_opt)**2/(2*xi**2))/lambda_a)*exp((lambda_a - lambda_opt)**2/(2*xi**2))/(alpha_steady(3)*f_1 + alpha_steady(4)*f_2);
 
 endfunction
@@ -91,15 +94,15 @@ endfunction
 # Main driver
 
 # Step 1: Solve for chemical state, given lambda and beta
-global lambda = 0.75;
-global beta = 0.1;
-
 alpha_0 = [0.25; 0.25; 0.25; 0.25];
 steps = 1000;
-t = linspace(0, 100, steps)';
+t = linspace(0, 10000, steps)';
 
 alpha = lsode("hai_murphy_98", alpha_0, t);
+plot(t, alpha)
+
 global alpha_steady = alpha(steps, :);
+alpha_steady
 
 # Step 2: Solve for the active stretch, given the steady-state
 #         chemical concentrations above
@@ -108,8 +111,11 @@ lambda_a_0 = 1.0;
 t = linspace(0, 100, steps)';
 
 lambda_a = lsode("stalhand_08", lambda_a_0, t);
+lambda_a_steady = lambda_a(steps)
+plot(t, lambda_a)
 
-lambda_a_steady = lambda_a(steps);
+# Step 3: Compute the total stress, given the steady state
+#         chemical state and active stretch
 
 P = total_stress(alpha_steady, lambda, lambda_a_steady)
 
