@@ -1,403 +1,373 @@
+# Size of variable arrays:
+sizeAlgebraic = 45
+sizeStates = 11
+sizeConstants = 64
+from math import *
+from numpy import *
 
-function [VOI, STATES, ALGEBRAIC, CONSTANTS] = mainFunction()
-    % This is the "main function".  In Matlab, things work best if you rename this function to match the filename.
-   [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel();
-end
+def createLegends():
+    legend_states = [""] * sizeStates
+    legend_rates = [""] * sizeStates
+    legend_algebraic = [""] * sizeAlgebraic
+    legend_voi = ""
+    legend_constants = [""] * sizeConstants
+    legend_voi = "time in component environment (millisecond)"
+    legend_algebraic[3] = "SOVFThick in component sarcomere_geometry (dimensionless)"
+    legend_algebraic[4] = "SOVFThin in component sarcomere_geometry (dimensionless)"
+    legend_algebraic[0] = "sovr_ze in component sarcomere_geometry (micrometre)"
+    legend_algebraic[1] = "sovr_cle in component sarcomere_geometry (micrometre)"
+    legend_algebraic[2] = "len_sovr in component sarcomere_geometry (micrometre)"
+    legend_constants[0] = "SLmax in component normalised_active_and_passive_force (micrometre)"
+    legend_constants[1] = "SLmin in component normalised_active_and_passive_force (micrometre)"
+    legend_constants[2] = "len_thin in component model_parameters (micrometre)"
+    legend_constants[3] = "len_thick in component model_parameters (micrometre)"
+    legend_constants[4] = "len_hbare in component model_parameters (micrometre)"
+    legend_states[0] = "SL in component normalised_active_and_passive_force (micrometre)"
+    legend_states[1] = "TRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_states[2] = "TRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_algebraic[42] = "dTRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_algebraic[43] = "dTRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_algebraic[10] = "kn_pT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_algebraic[14] = "kp_nT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[55] = "konT in component Ca_binding_to_troponin_to_thin_filament_regulation (second_order_rate_constant)"
+    legend_constants[56] = "koffLT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[57] = "koffHT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[5] = "Qkon in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[6] = "Qkoff in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[7] = "Qkn_p in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[8] = "Qkp_n in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[9] = "kon in component Ca_binding_to_troponin_to_thin_filament_regulation (second_order_rate_constant)"
+    legend_constants[10] = "koffL in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[11] = "koffH in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[12] = "perm50 in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[13] = "nperm in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[14] = "kn_p in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[15] = "kp_n in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)"
+    legend_constants[16] = "koffmod in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_algebraic[6] = "Tropreg in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_algebraic[8] = "permtot in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_algebraic[12] = "inprmt in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_constants[17] = "TmpC in component model_parameters (celsius)"
+    legend_algebraic[40] = "Cai in component equation_for_simulated_calcium_transient (micromolar)"
+    legend_constants[58] = "fappT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_algebraic[17] = "gappT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_algebraic[20] = "hfT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_algebraic[21] = "hbT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_algebraic[23] = "gxbT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[18] = "fapp in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[19] = "gapp in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[20] = "hf in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[21] = "hb in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[22] = "gxb in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)"
+    legend_constants[23] = "gslmod in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_algebraic[18] = "hfmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_algebraic[19] = "hbmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[24] = "hfmdc in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[25] = "hbmdc in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[26] = "sigmap in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[27] = "sigman in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[28] = "xbmodsp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[29] = "Qfapp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[30] = "Qgapp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[31] = "Qhf in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[32] = "Qhb in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[33] = "Qgxb in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_algebraic[22] = "gxbmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_algebraic[16] = "gapslmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)"
+    legend_constants[34] = "x_0 in component model_parameters (micrometre)"
+    legend_states[3] = "xXBpostr in component mean_strain_of_strongly_bound_states (micrometre)"
+    legend_states[4] = "xXBprer in component mean_strain_of_strongly_bound_states (micrometre)"
+    legend_states[5] = "XBpostr in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_states[6] = "XBprer in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_algebraic[24] = "dXBpostr in component regulation_and_crossbridge_cycling_state_equations (first_order_rate_constant)"
+    legend_algebraic[26] = "dXBprer in component regulation_and_crossbridge_cycling_state_equations (first_order_rate_constant)"
+    legend_states[7] = "N_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_states[8] = "P_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_algebraic[25] = "P in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_states[9] = "N in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_algebraic[31] = "dxXBpostr in component mean_strain_of_strongly_bound_states (micrometre_per_millisecond)"
+    legend_algebraic[30] = "dxXBprer in component mean_strain_of_strongly_bound_states (micrometre_per_millisecond)"
+    legend_constants[35] = "xPsi in component mean_strain_of_strongly_bound_states (dimensionless)"
+    legend_algebraic[27] = "dutyprer in component mean_strain_of_strongly_bound_states (dimensionless)"
+    legend_algebraic[28] = "dutypostr in component mean_strain_of_strongly_bound_states (dimensionless)"
+    legend_algebraic[29] = "dSL in component normalised_active_and_passive_force (micrometre_per_millisecond)"
+    legend_constants[61] = "SSXBpostr in component normalised_active_and_passive_force (dimensionless)"
+    legend_constants[59] = "SSXBprer in component normalised_active_and_passive_force (dimensionless)"
+    legend_constants[36] = "kxb in component normalised_active_and_passive_force (millinewton_per_millimetre2)"
+    legend_constants[62] = "Fnordv in component normalised_active_and_passive_force (millinewton_micrometre_per_millimetre2)"
+    legend_algebraic[5] = "force in component normalised_active_and_passive_force (millinewton_micrometre_per_millimetre2)"
+    legend_algebraic[7] = "active in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_algebraic[13] = "ppforce in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_algebraic[9] = "ppforce_t in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_algebraic[11] = "ppforce_c in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_constants[63] = "preload in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_algebraic[15] = "afterload in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_states[10] = "intf in component normalised_active_and_passive_force (unit_normalised_force_millisecond)"
+    legend_constants[37] = "SL_c in component normalised_active_and_passive_force (micrometre)"
+    legend_constants[38] = "SLrest in component normalised_active_and_passive_force (micrometre)"
+    legend_constants[39] = "SLset in component normalised_active_and_passive_force (micrometre)"
+    legend_constants[40] = "PCon_t in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_constants[41] = "PExp_t in component normalised_active_and_passive_force (per_micrometre)"
+    legend_constants[42] = "PCon_c in component normalised_active_and_passive_force (unit_normalised_force)"
+    legend_constants[43] = "PExp_c in component normalised_active_and_passive_force (per_micrometre)"
+    legend_constants[44] = "massf in component normalised_active_and_passive_force (unit_normalised_force_millisecond2_per_micrometre)"
+    legend_constants[45] = "visc in component normalised_active_and_passive_force (unit_normalised_force_millisecond_per_micrometre)"
+    legend_constants[46] = "KSE in component normalised_active_and_passive_force (unit_normalised_force_per_micrometre)"
+    legend_constants[47] = "SEon in component normalised_active_and_passive_force (dimensionless)"
+    legend_algebraic[32] = "FrSBXB in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (dimensionless)"
+    legend_algebraic[33] = "dFrSBXB in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)"
+    legend_algebraic[35] = "dsovr_ze in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)"
+    legend_algebraic[36] = "dsovr_cle in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)"
+    legend_algebraic[37] = "dlen_sovr in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)"
+    legend_algebraic[39] = "dSOVFThick in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)"
+    legend_algebraic[38] = "dSOVFThin in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)"
+    legend_constants[48] = "kxb in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (millinewton_per_millimetre2)"
+    legend_algebraic[41] = "dforce in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (millinewton_micrometre_per_millimetre2_per_millisecond)"
+    legend_constants[49] = "Trop_conc in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar)"
+    legend_algebraic[34] = "TropTot in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar)"
+    legend_algebraic[44] = "dTropTot in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar_per_millisecond)"
+    legend_constants[60] = "beta in component equation_for_simulated_calcium_transient (dimensionless)"
+    legend_constants[50] = "tau1 in component equation_for_simulated_calcium_transient (millisecond)"
+    legend_constants[51] = "tau2 in component equation_for_simulated_calcium_transient (millisecond)"
+    legend_constants[52] = "start_time in component equation_for_simulated_calcium_transient (millisecond)"
+    legend_constants[53] = "Ca_amplitude in component equation_for_simulated_calcium_transient (micromolar)"
+    legend_constants[54] = "Ca_diastolic in component equation_for_simulated_calcium_transient (micromolar)"
+    legend_rates[1] = "d/dt TRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_rates[2] = "d/dt TRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)"
+    legend_rates[7] = "d/dt N_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_rates[8] = "d/dt P_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_rates[9] = "d/dt N in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_rates[6] = "d/dt XBprer in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_rates[5] = "d/dt XBpostr in component regulation_and_crossbridge_cycling_state_equations (dimensionless)"
+    legend_rates[4] = "d/dt xXBprer in component mean_strain_of_strongly_bound_states (micrometre)"
+    legend_rates[3] = "d/dt xXBpostr in component mean_strain_of_strongly_bound_states (micrometre)"
+    legend_rates[0] = "d/dt SL in component normalised_active_and_passive_force (micrometre)"
+    legend_rates[10] = "d/dt intf in component normalised_active_and_passive_force (unit_normalised_force_millisecond)"
+    return (legend_states, legend_algebraic, legend_voi, legend_constants)
 
-function [algebraicVariableCount] = getAlgebraicVariableCount() 
-    % Used later when setting a global variable with the number of algebraic variables.
-    % Note: This is not the "main method".  
-    algebraicVariableCount =45;
-end
-% There are a total of 11 entries in each of the rate and state variable arrays.
-% There are a total of 64 entries in the constant variable array.
-%
+def initConsts():
+    constants = [0.0] * sizeConstants; states = [0.0] * sizeStates;
+    constants[0] = 2.4
+    constants[1] = 1.4
+    constants[2] = 1.2
+    constants[3] = 1.65
+    constants[4] = 0.1
+    states[0] = 1.89999811516093
+    states[1] = 0.0147730085063734
+    states[2] = 0.13066096561522
+    constants[5] = 1.5
+    constants[6] = 1.3
+    constants[7] = 1.6
+    constants[8] = 1.6
+    constants[9] = 0.05
+    constants[10] = 0.25
+    constants[11] = 0.025
+    constants[12] = 0.5
+    constants[13] = 15
+    constants[14] = 0.5
+    constants[15] = 0.05
+    constants[16] = 1
+    constants[17] = 24
+    constants[18] = 0.5
+    constants[19] = 0.07
+    constants[20] = 2
+    constants[21] = 0.4
+    constants[22] = 0.07
+    constants[23] = 6
+    constants[24] = 5
+    constants[25] = 0
+    constants[26] = 8
+    constants[27] = 1
+    constants[28] = 1
+    constants[29] = 6.25
+    constants[30] = 2.5
+    constants[31] = 6.25
+    constants[32] = 6.25
+    constants[33] = 6.25
+    constants[34] = 0.007
+    states[3] = 0.00700005394873882
+    states[4] = 3.41212828972468e-8
+    states[5] = 1.81017564383744e-6
+    states[6] = 3.0494964880038e-7
+    states[7] = 0.999999959256274
+    states[8] = 4.07437173988636e-8
+    states[9] = 0.999997834540066
+    constants[35] = 2
+    constants[36] = 120
+    states[10] = -4.5113452510363e-6
+    constants[37] = 2.25
+    constants[38] = 1.85
+    constants[39] = 1.9
+    constants[40] = 0.002
+    constants[41] = 10
+    constants[42] = 0.02
+    constants[43] = 70
+    constants[44] = 50
+    constants[45] = 3
+    constants[46] = 1
+    constants[47] = 1
+    constants[48] = 120
+    constants[49] = 70
+    constants[50] = 20
+    constants[51] = 110
+    constants[52] = 5
+    constants[53] = 1.45
+    constants[54] = 0.09
+    constants[55] = constants[9]*constants[5]**(constants[17]-37.0000)/10.0000
+    constants[56] = constants[10]*constants[16]*constants[6]**(constants[17]-37.0000)/10.0000
+    constants[57] = constants[11]*constants[16]*constants[6]**(constants[17]-37.0000)/10.0000
+    constants[58] = constants[18]*constants[28]*constants[29]**(constants[17]-37.0000)/10.0000
+    constants[59] = (constants[21]*constants[18]+constants[22]*constants[18])/(constants[18]*constants[20]+constants[22]*constants[20]+constants[22]*constants[19]+constants[21]*constants[18]+constants[21]*constants[19]+constants[22]*constants[18])
+    constants[60] = constants[50]/constants[51]**-1.00000/(constants[50]/constants[51]-1.00000)-constants[50]/constants[51]**-1.00000/(1.00000-constants[51]/constants[50])
+    constants[61] = constants[18]*constants[20]/(constants[18]*constants[20]+constants[22]*constants[20]+constants[22]*constants[19]+constants[21]*constants[18]+constants[21]*constants[19]+constants[22]*constants[18])
+    constants[62] = constants[36]*constants[34]*constants[61]
+    constants[63] = fabs(constants[39]-constants[38])/(constants[39]-constants[38])*constants[40]*(exp(constants[41]*fabs(constants[39]-constants[38]))-1.00000)
+    return (states, constants)
 
-function [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel()
-    % Create ALGEBRAIC of correct size
-    global algebraicVariableCount;  algebraicVariableCount = getAlgebraicVariableCount();
-    % Initialise constants and state variables
-    [INIT_STATES, CONSTANTS] = initConsts;
+def computeRates(voi, states, constants):
+    rates = [0.0] * sizeStates; algebraic = [0.0] * sizeAlgebraic
+    algebraic[0] = custom_piecewise([less(constants[3]/2.00000 , states[0]/2.00000), constants[3]/2.00000 , True, states[0]/2.00000])
+    algebraic[1] = custom_piecewise([greater(states[0]/2.00000-(states[0]-constants[2]) , constants[4]/2.00000), states[0]/2.00000-(states[0]-constants[2]) , True, constants[4]/2.00000])
+    algebraic[2] = algebraic[0]-algebraic[1]
+    algebraic[4] = algebraic[2]/constants[2]
+    algebraic[6] = (1.00000-algebraic[4])*states[1]+algebraic[4]*states[2]
+    algebraic[8] = fabs(1.00000/(1.00000+constants[12]/algebraic[6]**constants[13]))**(1.0/2)
+    algebraic[10] = constants[14]*algebraic[8]*constants[7]**(constants[17]-37.0000)/10.0000
+    algebraic[12] = custom_piecewise([less(1.00000/algebraic[8] , 100.000), 1.00000/algebraic[8] , True, 100.000])
+    algebraic[14] = constants[15]*algebraic[12]*constants[8]**(constants[17]-37.0000)/10.0000
+    rates[7] = algebraic[14]*states[8]-algebraic[10]*states[7]
+    rates[8] = algebraic[10]*states[7]-algebraic[14]*states[8]
+    algebraic[3] = algebraic[2]*2.00000/(constants[3]-constants[4])
+    algebraic[5] = constants[36]*algebraic[3]*(states[3]*states[5]+states[4]*states[6])
+    algebraic[7] = 1.00000*algebraic[5]/constants[62]
+    algebraic[9] = (states[0]-constants[38])/fabs(states[0]-constants[38])*constants[40]*(exp(constants[41]*fabs(states[0]-constants[38]))-1.00000)
+    algebraic[11] = custom_piecewise([greater(states[0] , constants[37]), constants[42]*(exp(constants[43]*fabs(states[0]-constants[37]))-1.00000) , True, 0.00000])
+    algebraic[13] = algebraic[9]+algebraic[11]
+    algebraic[15] = custom_piecewise([equal(constants[47] , 1.00000), constants[46]*(constants[39]-states[0]) , True, 0.00000])
+    rates[10] = constants[63]+algebraic[15]-(algebraic[13]+algebraic[7])
+    algebraic[18] = exp(-states[4]/fabs(states[4])*constants[24]*states[4]/constants[34]**2.00000)
+    algebraic[20] = constants[20]*algebraic[18]*constants[28]*constants[31]**(constants[17]-37.0000)/10.0000
+    algebraic[19] = exp((states[3]-constants[34])/fabs(states[3]-constants[34])*constants[25]*(states[3]-constants[34])/constants[34]**2.00000)
+    algebraic[21] = constants[21]*algebraic[19]*constants[28]*constants[32]**(constants[17]-37.0000)/10.0000
+    algebraic[22] = custom_piecewise([less(states[3] , constants[34]), exp(constants[26]*(constants[34]-states[3])/constants[34]**2.00000) , True, exp(constants[27]*(states[3]-constants[34])/constants[34]**2.00000)])
+    algebraic[23] = constants[22]*algebraic[22]*constants[28]*constants[33]**(constants[17]-37.0000)/10.0000
+    algebraic[24] = algebraic[20]*states[6]-(algebraic[21]*states[5]+algebraic[23]*states[5])
+    rates[5] = algebraic[24]
+    algebraic[25] = 1.00000-states[9]-states[6]-states[5]
+    rates[9] = algebraic[14]*algebraic[25]-algebraic[10]*states[9]
+    algebraic[16] = 1.00000+(1.00000-algebraic[3])*constants[23]
+    algebraic[17] = constants[19]*algebraic[16]*constants[28]*constants[30]**(constants[17]-37.0000)/10.0000
+    algebraic[26] = constants[58]*algebraic[25]+algebraic[21]*states[5]-(algebraic[17]*states[6]+algebraic[20]*states[6])
+    rates[6] = algebraic[26]
+    algebraic[29] = custom_piecewise([less_equal(states[0] , constants[0]) & greater(states[0] , constants[1]), (states[10]+(constants[39]-states[0])*constants[45])/constants[44] , True, 0.00000])
+    rates[0] = algebraic[29]
+    algebraic[27] = (algebraic[21]*constants[58]+algebraic[23]*constants[58])/(constants[58]*algebraic[20]+algebraic[23]*algebraic[20]+algebraic[23]*algebraic[17]+algebraic[21]*constants[58]+algebraic[21]*algebraic[17]+algebraic[23]*constants[58])
+    algebraic[30] = algebraic[29]/2.00000+constants[35]/algebraic[27]*(constants[58]*-states[4]+algebraic[21]*(states[3]-constants[34]+states[4]))
+    rates[4] = algebraic[30]
+    algebraic[28] = constants[58]*algebraic[20]/(constants[58]*algebraic[20]+algebraic[23]*algebraic[20]+algebraic[23]*algebraic[17]+algebraic[21]*constants[58]+algebraic[21]*algebraic[17]+algebraic[23]*constants[58])
+    algebraic[31] = algebraic[29]/2.00000+constants[35]/algebraic[28]*algebraic[20]*(states[4]+constants[34]-states[3])
+    rates[3] = algebraic[31]
+    algebraic[40] = custom_piecewise([greater(voi , constants[52]), (constants[53]-constants[54])/constants[60]*(exp(-(voi-constants[52])/constants[50])-exp(-(voi-constants[52])/constants[51]))+constants[54] , True, constants[54]])
+    algebraic[42] = constants[55]*algebraic[40]*(1.00000-states[1])-constants[56]*states[1]
+    rates[1] = algebraic[42]
+    algebraic[43] = constants[55]*algebraic[40]*(1.00000-states[2])-constants[57]*states[2]
+    rates[2] = algebraic[43]
+    return(rates)
 
-    % Set timespan to solve over 
-    tspan = [0, 10];
+def computeAlgebraic(constants, states, voi):
+    algebraic = array([[0.0] * len(voi)] * sizeAlgebraic)
+    states = array(states)
+    voi = array(voi)
+    algebraic[0] = custom_piecewise([less(constants[3]/2.00000 , states[0]/2.00000), constants[3]/2.00000 , True, states[0]/2.00000])
+    algebraic[1] = custom_piecewise([greater(states[0]/2.00000-(states[0]-constants[2]) , constants[4]/2.00000), states[0]/2.00000-(states[0]-constants[2]) , True, constants[4]/2.00000])
+    algebraic[2] = algebraic[0]-algebraic[1]
+    algebraic[4] = algebraic[2]/constants[2]
+    algebraic[6] = (1.00000-algebraic[4])*states[1]+algebraic[4]*states[2]
+    algebraic[8] = fabs(1.00000/(1.00000+constants[12]/algebraic[6]**constants[13]))**(1.0/2)
+    algebraic[10] = constants[14]*algebraic[8]*constants[7]**(constants[17]-37.0000)/10.0000
+    algebraic[12] = custom_piecewise([less(1.00000/algebraic[8] , 100.000), 1.00000/algebraic[8] , True, 100.000])
+    algebraic[14] = constants[15]*algebraic[12]*constants[8]**(constants[17]-37.0000)/10.0000
+    algebraic[3] = algebraic[2]*2.00000/(constants[3]-constants[4])
+    algebraic[5] = constants[36]*algebraic[3]*(states[3]*states[5]+states[4]*states[6])
+    algebraic[7] = 1.00000*algebraic[5]/constants[62]
+    algebraic[9] = (states[0]-constants[38])/fabs(states[0]-constants[38])*constants[40]*(exp(constants[41]*fabs(states[0]-constants[38]))-1.00000)
+    algebraic[11] = custom_piecewise([greater(states[0] , constants[37]), constants[42]*(exp(constants[43]*fabs(states[0]-constants[37]))-1.00000) , True, 0.00000])
+    algebraic[13] = algebraic[9]+algebraic[11]
+    algebraic[15] = custom_piecewise([equal(constants[47] , 1.00000), constants[46]*(constants[39]-states[0]) , True, 0.00000])
+    algebraic[18] = exp(-states[4]/fabs(states[4])*constants[24]*states[4]/constants[34]**2.00000)
+    algebraic[20] = constants[20]*algebraic[18]*constants[28]*constants[31]**(constants[17]-37.0000)/10.0000
+    algebraic[19] = exp((states[3]-constants[34])/fabs(states[3]-constants[34])*constants[25]*(states[3]-constants[34])/constants[34]**2.00000)
+    algebraic[21] = constants[21]*algebraic[19]*constants[28]*constants[32]**(constants[17]-37.0000)/10.0000
+    algebraic[22] = custom_piecewise([less(states[3] , constants[34]), exp(constants[26]*(constants[34]-states[3])/constants[34]**2.00000) , True, exp(constants[27]*(states[3]-constants[34])/constants[34]**2.00000)])
+    algebraic[23] = constants[22]*algebraic[22]*constants[28]*constants[33]**(constants[17]-37.0000)/10.0000
+    algebraic[24] = algebraic[20]*states[6]-(algebraic[21]*states[5]+algebraic[23]*states[5])
+    algebraic[25] = 1.00000-states[9]-states[6]-states[5]
+    algebraic[16] = 1.00000+(1.00000-algebraic[3])*constants[23]
+    algebraic[17] = constants[19]*algebraic[16]*constants[28]*constants[30]**(constants[17]-37.0000)/10.0000
+    algebraic[26] = constants[58]*algebraic[25]+algebraic[21]*states[5]-(algebraic[17]*states[6]+algebraic[20]*states[6])
+    algebraic[29] = custom_piecewise([less_equal(states[0] , constants[0]) & greater(states[0] , constants[1]), (states[10]+(constants[39]-states[0])*constants[45])/constants[44] , True, 0.00000])
+    algebraic[27] = (algebraic[21]*constants[58]+algebraic[23]*constants[58])/(constants[58]*algebraic[20]+algebraic[23]*algebraic[20]+algebraic[23]*algebraic[17]+algebraic[21]*constants[58]+algebraic[21]*algebraic[17]+algebraic[23]*constants[58])
+    algebraic[30] = algebraic[29]/2.00000+constants[35]/algebraic[27]*(constants[58]*-states[4]+algebraic[21]*(states[3]-constants[34]+states[4]))
+    algebraic[28] = constants[58]*algebraic[20]/(constants[58]*algebraic[20]+algebraic[23]*algebraic[20]+algebraic[23]*algebraic[17]+algebraic[21]*constants[58]+algebraic[21]*algebraic[17]+algebraic[23]*constants[58])
+    algebraic[31] = algebraic[29]/2.00000+constants[35]/algebraic[28]*algebraic[20]*(states[4]+constants[34]-states[3])
+    algebraic[40] = custom_piecewise([greater(voi , constants[52]), (constants[53]-constants[54])/constants[60]*(exp(-(voi-constants[52])/constants[50])-exp(-(voi-constants[52])/constants[51]))+constants[54] , True, constants[54]])
+    algebraic[42] = constants[55]*algebraic[40]*(1.00000-states[1])-constants[56]*states[1]
+    algebraic[43] = constants[55]*algebraic[40]*(1.00000-states[2])-constants[57]*states[2]
+    algebraic[32] = (states[5]+states[6])/(constants[61]+constants[59])
+    algebraic[33] = (algebraic[24]+algebraic[26])/(constants[61]+constants[59])
+    algebraic[34] = constants[49]*((1.00000-algebraic[4])*states[1]+algebraic[4]*(algebraic[32]*states[2]+(1.00000-algebraic[32])*states[1]))
+    algebraic[35] = custom_piecewise([less(states[0] , constants[3]), -0.500000*algebraic[29] , True, 0.00000])
+    algebraic[36] = custom_piecewise([greater(2.00000*constants[2]-states[0] , constants[4]), -0.500000*algebraic[29] , True, 0.00000])
+    algebraic[37] = algebraic[35]-algebraic[36]
+    algebraic[38] = algebraic[37]/constants[2]
+    algebraic[39] = 2.00000*algebraic[37]/(constants[3]-constants[4])
+    algebraic[41] = constants[48]*algebraic[39]*(states[3]*states[5]+states[4]*states[6])+constants[48]*algebraic[3]*(algebraic[31]*states[5]+states[3]*algebraic[24]+algebraic[30]*states[6]+states[4]*algebraic[26])
+    algebraic[44] = constants[49]*(-algebraic[38]*states[1]+(1.00000-algebraic[4])*algebraic[42]+algebraic[38]*(algebraic[32]*states[2]+(1.00000-algebraic[32])*states[1])+algebraic[4]*(algebraic[33]*states[2]+algebraic[32]*algebraic[43]+(1.00000-algebraic[32])*algebraic[42]-algebraic[33]*states[1]))
+    return algebraic
 
-    % Set numerical accuracy options for ODE solver
-    options = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 1);
+def custom_piecewise(cases):
+    """Compute result of a piecewise function"""
+    return select(cases[0::2],cases[1::2])
 
-    % Solve model with ODE solver
-    [VOI, STATES] = ode15s(@(VOI, STATES)computeRates(VOI, STATES, CONSTANTS), tspan, INIT_STATES, options);
+def solve_model():
+    """Solve model with ODE solver"""
+    from scipy.integrate import ode
+    # Initialise constants and state variables
+    (init_states, constants) = initConsts()
 
-    % Compute algebraic variables
-    [RATES, ALGEBRAIC] = computeRates(VOI, STATES, CONSTANTS);
-    ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI);
+    # Set timespan to solve over
+    voi = linspace(0, 10, 500)
 
-    % Plot state variables against variable of integration
-    [LEGEND_STATES, LEGEND_ALGEBRAIC, LEGEND_VOI, LEGEND_CONSTANTS] = createLegends();
-    figure();
-    plot(VOI, STATES);
-    xlabel(LEGEND_VOI);
-    l = legend(LEGEND_STATES);
-    set(l,'Interpreter','none');
-end
+    # Construct ODE object to solve
+    r = ode(computeRates)
+    r.set_integrator('vode', method='bdf', atol=1e-06, rtol=1e-06, max_step=1)
+    r.set_initial_value(init_states, voi[0])
+    r.set_f_params(constants)
 
-function [LEGEND_STATES, LEGEND_ALGEBRAIC, LEGEND_VOI, LEGEND_CONSTANTS] = createLegends()
-    LEGEND_STATES = ''; LEGEND_ALGEBRAIC = ''; LEGEND_VOI = ''; LEGEND_CONSTANTS = '';
-    LEGEND_VOI = strpad('time in component environment (millisecond)');
-    LEGEND_ALGEBRAIC(:,4) = strpad('SOVFThick in component sarcomere_geometry (dimensionless)');
-    LEGEND_ALGEBRAIC(:,5) = strpad('SOVFThin in component sarcomere_geometry (dimensionless)');
-    LEGEND_ALGEBRAIC(:,1) = strpad('sovr_ze in component sarcomere_geometry (micrometre)');
-    LEGEND_ALGEBRAIC(:,2) = strpad('sovr_cle in component sarcomere_geometry (micrometre)');
-    LEGEND_ALGEBRAIC(:,3) = strpad('len_sovr in component sarcomere_geometry (micrometre)');
-    LEGEND_CONSTANTS(:,1) = strpad('SLmax in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_CONSTANTS(:,2) = strpad('SLmin in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_CONSTANTS(:,3) = strpad('len_thin in component model_parameters (micrometre)');
-    LEGEND_CONSTANTS(:,4) = strpad('len_thick in component model_parameters (micrometre)');
-    LEGEND_CONSTANTS(:,5) = strpad('len_hbare in component model_parameters (micrometre)');
-    LEGEND_STATES(:,1) = strpad('SL in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_STATES(:,2) = strpad('TRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_STATES(:,3) = strpad('TRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_ALGEBRAIC(:,43) = strpad('dTRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,44) = strpad('dTRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,11) = strpad('kn_pT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,15) = strpad('kp_nT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,56) = strpad('konT in component Ca_binding_to_troponin_to_thin_filament_regulation (second_order_rate_constant)');
-    LEGEND_CONSTANTS(:,57) = strpad('koffLT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,58) = strpad('koffHT in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,6) = strpad('Qkon in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,7) = strpad('Qkoff in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,8) = strpad('Qkn_p in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,9) = strpad('Qkp_n in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,10) = strpad('kon in component Ca_binding_to_troponin_to_thin_filament_regulation (second_order_rate_constant)');
-    LEGEND_CONSTANTS(:,11) = strpad('koffL in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,12) = strpad('koffH in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,13) = strpad('perm50 in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,14) = strpad('nperm in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,15) = strpad('kn_p in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,16) = strpad('kp_n in component Ca_binding_to_troponin_to_thin_filament_regulation (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,17) = strpad('koffmod in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_ALGEBRAIC(:,7) = strpad('Tropreg in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_ALGEBRAIC(:,9) = strpad('permtot in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_ALGEBRAIC(:,13) = strpad('inprmt in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_CONSTANTS(:,18) = strpad('TmpC in component model_parameters (celsius)');
-    LEGEND_ALGEBRAIC(:,41) = strpad('Cai in component equation_for_simulated_calcium_transient (micromolar)');
-    LEGEND_CONSTANTS(:,59) = strpad('fappT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,18) = strpad('gappT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,21) = strpad('hfT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,22) = strpad('hbT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,24) = strpad('gxbT in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,19) = strpad('fapp in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,20) = strpad('gapp in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,21) = strpad('hf in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,22) = strpad('hb in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,23) = strpad('gxb in component thin_filament_regulation_and_crossbridge_cycling_rates (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,24) = strpad('gslmod in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_ALGEBRAIC(:,19) = strpad('hfmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_ALGEBRAIC(:,20) = strpad('hbmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,25) = strpad('hfmdc in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,26) = strpad('hbmdc in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,27) = strpad('sigmap in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,28) = strpad('sigman in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,29) = strpad('xbmodsp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,30) = strpad('Qfapp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,31) = strpad('Qgapp in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,32) = strpad('Qhf in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,33) = strpad('Qhb in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,34) = strpad('Qgxb in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_ALGEBRAIC(:,23) = strpad('gxbmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_ALGEBRAIC(:,17) = strpad('gapslmd in component thin_filament_regulation_and_crossbridge_cycling_rates (dimensionless)');
-    LEGEND_CONSTANTS(:,35) = strpad('x_0 in component model_parameters (micrometre)');
-    LEGEND_STATES(:,4) = strpad('xXBpostr in component mean_strain_of_strongly_bound_states (micrometre)');
-    LEGEND_STATES(:,5) = strpad('xXBprer in component mean_strain_of_strongly_bound_states (micrometre)');
-    LEGEND_STATES(:,6) = strpad('XBpostr in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_STATES(:,7) = strpad('XBprer in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_ALGEBRAIC(:,25) = strpad('dXBpostr in component regulation_and_crossbridge_cycling_state_equations (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,27) = strpad('dXBprer in component regulation_and_crossbridge_cycling_state_equations (first_order_rate_constant)');
-    LEGEND_STATES(:,8) = strpad('N_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_STATES(:,9) = strpad('P_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_ALGEBRAIC(:,26) = strpad('P in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_STATES(:,10) = strpad('N in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_ALGEBRAIC(:,32) = strpad('dxXBpostr in component mean_strain_of_strongly_bound_states (micrometre_per_millisecond)');
-    LEGEND_ALGEBRAIC(:,31) = strpad('dxXBprer in component mean_strain_of_strongly_bound_states (micrometre_per_millisecond)');
-    LEGEND_CONSTANTS(:,36) = strpad('xPsi in component mean_strain_of_strongly_bound_states (dimensionless)');
-    LEGEND_ALGEBRAIC(:,28) = strpad('dutyprer in component mean_strain_of_strongly_bound_states (dimensionless)');
-    LEGEND_ALGEBRAIC(:,29) = strpad('dutypostr in component mean_strain_of_strongly_bound_states (dimensionless)');
-    LEGEND_ALGEBRAIC(:,30) = strpad('dSL in component normalised_active_and_passive_force (micrometre_per_millisecond)');
-    LEGEND_CONSTANTS(:,62) = strpad('SSXBpostr in component normalised_active_and_passive_force (dimensionless)');
-    LEGEND_CONSTANTS(:,60) = strpad('SSXBprer in component normalised_active_and_passive_force (dimensionless)');
-    LEGEND_CONSTANTS(:,37) = strpad('kxb in component normalised_active_and_passive_force (millinewton_per_millimetre2)');
-    LEGEND_CONSTANTS(:,63) = strpad('Fnordv in component normalised_active_and_passive_force (millinewton_micrometre_per_millimetre2)');
-    LEGEND_ALGEBRAIC(:,6) = strpad('force in component normalised_active_and_passive_force (millinewton_micrometre_per_millimetre2)');
-    LEGEND_ALGEBRAIC(:,8) = strpad('active in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_ALGEBRAIC(:,14) = strpad('ppforce in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_ALGEBRAIC(:,10) = strpad('ppforce_t in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_ALGEBRAIC(:,12) = strpad('ppforce_c in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_CONSTANTS(:,64) = strpad('preload in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_ALGEBRAIC(:,16) = strpad('afterload in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_STATES(:,11) = strpad('intf in component normalised_active_and_passive_force (unit_normalised_force_millisecond)');
-    LEGEND_CONSTANTS(:,38) = strpad('SL_c in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_CONSTANTS(:,39) = strpad('SLrest in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_CONSTANTS(:,40) = strpad('SLset in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_CONSTANTS(:,41) = strpad('PCon_t in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_CONSTANTS(:,42) = strpad('PExp_t in component normalised_active_and_passive_force (per_micrometre)');
-    LEGEND_CONSTANTS(:,43) = strpad('PCon_c in component normalised_active_and_passive_force (unit_normalised_force)');
-    LEGEND_CONSTANTS(:,44) = strpad('PExp_c in component normalised_active_and_passive_force (per_micrometre)');
-    LEGEND_CONSTANTS(:,45) = strpad('massf in component normalised_active_and_passive_force (unit_normalised_force_millisecond2_per_micrometre)');
-    LEGEND_CONSTANTS(:,46) = strpad('visc in component normalised_active_and_passive_force (unit_normalised_force_millisecond_per_micrometre)');
-    LEGEND_CONSTANTS(:,47) = strpad('KSE in component normalised_active_and_passive_force (unit_normalised_force_per_micrometre)');
-    LEGEND_CONSTANTS(:,48) = strpad('SEon in component normalised_active_and_passive_force (dimensionless)');
-    LEGEND_ALGEBRAIC(:,33) = strpad('FrSBXB in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (dimensionless)');
-    LEGEND_ALGEBRAIC(:,34) = strpad('dFrSBXB in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,36) = strpad('dsovr_ze in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)');
-    LEGEND_ALGEBRAIC(:,37) = strpad('dsovr_cle in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)');
-    LEGEND_ALGEBRAIC(:,38) = strpad('dlen_sovr in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micrometre_per_millisecond)');
-    LEGEND_ALGEBRAIC(:,40) = strpad('dSOVFThick in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)');
-    LEGEND_ALGEBRAIC(:,39) = strpad('dSOVFThin in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (first_order_rate_constant)');
-    LEGEND_CONSTANTS(:,49) = strpad('kxb in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (millinewton_per_millimetre2)');
-    LEGEND_ALGEBRAIC(:,42) = strpad('dforce in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (millinewton_micrometre_per_millimetre2_per_millisecond)');
-    LEGEND_CONSTANTS(:,50) = strpad('Trop_conc in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar)');
-    LEGEND_ALGEBRAIC(:,35) = strpad('TropTot in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar)');
-    LEGEND_ALGEBRAIC(:,45) = strpad('dTropTot in component calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding (micromolar_per_millisecond)');
-    LEGEND_CONSTANTS(:,61) = strpad('beta in component equation_for_simulated_calcium_transient (dimensionless)');
-    LEGEND_CONSTANTS(:,51) = strpad('tau1 in component equation_for_simulated_calcium_transient (millisecond)');
-    LEGEND_CONSTANTS(:,52) = strpad('tau2 in component equation_for_simulated_calcium_transient (millisecond)');
-    LEGEND_CONSTANTS(:,53) = strpad('start_time in component equation_for_simulated_calcium_transient (millisecond)');
-    LEGEND_CONSTANTS(:,54) = strpad('Ca_amplitude in component equation_for_simulated_calcium_transient (micromolar)');
-    LEGEND_CONSTANTS(:,55) = strpad('Ca_diastolic in component equation_for_simulated_calcium_transient (micromolar)');
-    LEGEND_RATES(:,2) = strpad('d/dt TRPNCaL in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_RATES(:,3) = strpad('d/dt TRPNCaH in component Ca_binding_to_troponin_to_thin_filament_regulation (dimensionless)');
-    LEGEND_RATES(:,8) = strpad('d/dt N_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_RATES(:,9) = strpad('d/dt P_NoXB in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_RATES(:,10) = strpad('d/dt N in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_RATES(:,7) = strpad('d/dt XBprer in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_RATES(:,6) = strpad('d/dt XBpostr in component regulation_and_crossbridge_cycling_state_equations (dimensionless)');
-    LEGEND_RATES(:,5) = strpad('d/dt xXBprer in component mean_strain_of_strongly_bound_states (micrometre)');
-    LEGEND_RATES(:,4) = strpad('d/dt xXBpostr in component mean_strain_of_strongly_bound_states (micrometre)');
-    LEGEND_RATES(:,1) = strpad('d/dt SL in component normalised_active_and_passive_force (micrometre)');
-    LEGEND_RATES(:,11) = strpad('d/dt intf in component normalised_active_and_passive_force (unit_normalised_force_millisecond)');
-    LEGEND_STATES  = LEGEND_STATES';
-    LEGEND_ALGEBRAIC = LEGEND_ALGEBRAIC';
-    LEGEND_RATES = LEGEND_RATES';
-    LEGEND_CONSTANTS = LEGEND_CONSTANTS';
-end
+    # Solve model
+    states = array([[0.0] * len(voi)] * sizeStates)
+    states[:,0] = init_states
+    for (i,t) in enumerate(voi[1:]):
+        if r.successful():
+            r.integrate(t)
+            states[:,i+1] = r.y
+        else:
+            break
 
-function [STATES, CONSTANTS] = initConsts()
-    VOI = 0; CONSTANTS = []; STATES = []; ALGEBRAIC = [];
-    CONSTANTS(:,1) = 2.4;
-    CONSTANTS(:,2) = 1.4;
-    CONSTANTS(:,3) = 1.2;
-    CONSTANTS(:,4) = 1.65;
-    CONSTANTS(:,5) = 0.1;
-    STATES(:,1) = 1.89999811516093;
-    STATES(:,2) = 0.0147730085063734;
-    STATES(:,3) = 0.13066096561522;
-    CONSTANTS(:,6) = 1.5;
-    CONSTANTS(:,7) = 1.3;
-    CONSTANTS(:,8) = 1.6;
-    CONSTANTS(:,9) = 1.6;
-    CONSTANTS(:,10) = 0.05;
-    CONSTANTS(:,11) = 0.25;
-    CONSTANTS(:,12) = 0.025;
-    CONSTANTS(:,13) = 0.5;
-    CONSTANTS(:,14) = 15;
-    CONSTANTS(:,15) = 0.5;
-    CONSTANTS(:,16) = 0.05;
-    CONSTANTS(:,17) = 1;
-    CONSTANTS(:,18) = 24;
-    CONSTANTS(:,19) = 0.5;
-    CONSTANTS(:,20) = 0.07;
-    CONSTANTS(:,21) = 2;
-    CONSTANTS(:,22) = 0.4;
-    CONSTANTS(:,23) = 0.07;
-    CONSTANTS(:,24) = 6;
-    CONSTANTS(:,25) = 5;
-    CONSTANTS(:,26) = 0;
-    CONSTANTS(:,27) = 8;
-    CONSTANTS(:,28) = 1;
-    CONSTANTS(:,29) = 1;
-    CONSTANTS(:,30) = 6.25;
-    CONSTANTS(:,31) = 2.5;
-    CONSTANTS(:,32) = 6.25;
-    CONSTANTS(:,33) = 6.25;
-    CONSTANTS(:,34) = 6.25;
-    CONSTANTS(:,35) = 0.007;
-    STATES(:,4) = 0.00700005394873882;
-    STATES(:,5) = 3.41212828972468e-8;
-    STATES(:,6) = 1.81017564383744e-6;
-    STATES(:,7) = 3.0494964880038e-7;
-    STATES(:,8) = 0.999999959256274;
-    STATES(:,9) = 4.07437173988636e-8;
-    STATES(:,10) = 0.999997834540066;
-    CONSTANTS(:,36) = 2;
-    CONSTANTS(:,37) = 120;
-    STATES(:,11) = -4.5113452510363e-6;
-    CONSTANTS(:,38) = 2.25;
-    CONSTANTS(:,39) = 1.85;
-    CONSTANTS(:,40) = 1.9;
-    CONSTANTS(:,41) = 0.002;
-    CONSTANTS(:,42) = 10;
-    CONSTANTS(:,43) = 0.02;
-    CONSTANTS(:,44) = 70;
-    CONSTANTS(:,45) = 50;
-    CONSTANTS(:,46) = 3;
-    CONSTANTS(:,47) = 1;
-    CONSTANTS(:,48) = 1;
-    CONSTANTS(:,49) = 120;
-    CONSTANTS(:,50) = 70;
-    CONSTANTS(:,51) = 20;
-    CONSTANTS(:,52) = 110;
-    CONSTANTS(:,53) = 5;
-    CONSTANTS(:,54) = 1.45;
-    CONSTANTS(:,55) = 0.09;
-    CONSTANTS(:,56) =  CONSTANTS(:,10).*CONSTANTS(:,6) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    CONSTANTS(:,57) =  CONSTANTS(:,11).*CONSTANTS(:,17).*CONSTANTS(:,7) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    CONSTANTS(:,58) =  CONSTANTS(:,12).*CONSTANTS(:,17).*CONSTANTS(:,7) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    CONSTANTS(:,59) =  CONSTANTS(:,19).*CONSTANTS(:,29).*CONSTANTS(:,30) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    CONSTANTS(:,60) = ( CONSTANTS(:,22).*CONSTANTS(:,19)+ CONSTANTS(:,23).*CONSTANTS(:,19))./( CONSTANTS(:,19).*CONSTANTS(:,21)+ CONSTANTS(:,23).*CONSTANTS(:,21)+ CONSTANTS(:,23).*CONSTANTS(:,20)+ CONSTANTS(:,22).*CONSTANTS(:,19)+ CONSTANTS(:,22).*CONSTANTS(:,20)+ CONSTANTS(:,23).*CONSTANTS(:,19));
-    CONSTANTS(:,61) = CONSTANTS(:,51)./CONSTANTS(:,52) .^  - 1.00000./(CONSTANTS(:,51)./CONSTANTS(:,52) - 1.00000) - CONSTANTS(:,51)./CONSTANTS(:,52) .^  - 1.00000./(1.00000 - CONSTANTS(:,52)./CONSTANTS(:,51));
-    CONSTANTS(:,62) =  CONSTANTS(:,19).*CONSTANTS(:,21)./( CONSTANTS(:,19).*CONSTANTS(:,21)+ CONSTANTS(:,23).*CONSTANTS(:,21)+ CONSTANTS(:,23).*CONSTANTS(:,20)+ CONSTANTS(:,22).*CONSTANTS(:,19)+ CONSTANTS(:,22).*CONSTANTS(:,20)+ CONSTANTS(:,23).*CONSTANTS(:,19));
-    CONSTANTS(:,63) =  CONSTANTS(:,37).*CONSTANTS(:,35).*CONSTANTS(:,62);
-    CONSTANTS(:,64) =  abs(CONSTANTS(:,40) - CONSTANTS(:,39))./(CONSTANTS(:,40) - CONSTANTS(:,39)).*CONSTANTS(:,41).*(exp( CONSTANTS(:,42).*abs(CONSTANTS(:,40) - CONSTANTS(:,39))) - 1.00000);
-    if (isempty(STATES)), warning('Initial values for states not set');, end
-end
+    # Compute algebraic variables
+    algebraic = computeAlgebraic(constants, states, voi)
+    return (voi, states, algebraic)
 
-function [RATES, ALGEBRAIC] = computeRates(VOI, STATES, CONSTANTS)
-    global algebraicVariableCount;
-    statesSize = size(STATES);
-    statesColumnCount = statesSize(2);
-    if ( statesColumnCount == 1)
-        STATES = STATES';
-        ALGEBRAIC = zeros(1, algebraicVariableCount);
-    else
-        statesRowCount = statesSize(1);
-        ALGEBRAIC = zeros(statesRowCount, algebraicVariableCount);
-        RATES = zeros(statesRowCount, statesColumnCount);
-    end
-    ALGEBRAIC(:,1) = piecewise({CONSTANTS(:,4)./2.00000<STATES(:,1)./2.00000, CONSTANTS(:,4)./2.00000 }, STATES(:,1)./2.00000);
-    ALGEBRAIC(:,2) = piecewise({STATES(:,1)./2.00000 - (STATES(:,1) - CONSTANTS(:,3))>CONSTANTS(:,5)./2.00000, STATES(:,1)./2.00000 - (STATES(:,1) - CONSTANTS(:,3)) }, CONSTANTS(:,5)./2.00000);
-    ALGEBRAIC(:,3) = ALGEBRAIC(:,1) - ALGEBRAIC(:,2);
-    ALGEBRAIC(:,5) = ALGEBRAIC(:,3)./CONSTANTS(:,3);
-    ALGEBRAIC(:,7) =  (1.00000 - ALGEBRAIC(:,5)).*STATES(:,2)+ ALGEBRAIC(:,5).*STATES(:,3);
-    ALGEBRAIC(:,9) =  abs(1.00000./(1.00000+CONSTANTS(:,13)./ALGEBRAIC(:,7) .^ CONSTANTS(:,14))) .^ (1.0 / 2);
-    ALGEBRAIC(:,11) =  CONSTANTS(:,15).*ALGEBRAIC(:,9).*CONSTANTS(:,8) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,13) = piecewise({1.00000./ALGEBRAIC(:,9)<100.000, 1.00000./ALGEBRAIC(:,9) }, 100.000);
-    ALGEBRAIC(:,15) =  CONSTANTS(:,16).*ALGEBRAIC(:,13).*CONSTANTS(:,9) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    RATES(:,8) =  ALGEBRAIC(:,15).*STATES(:,9) -  ALGEBRAIC(:,11).*STATES(:,8);
-    RATES(:,9) =  ALGEBRAIC(:,11).*STATES(:,8) -  ALGEBRAIC(:,15).*STATES(:,9);
-    ALGEBRAIC(:,4) =  ALGEBRAIC(:,3).*2.00000./(CONSTANTS(:,4) - CONSTANTS(:,5));
-    ALGEBRAIC(:,6) =  CONSTANTS(:,37).*ALGEBRAIC(:,4).*( STATES(:,4).*STATES(:,6)+ STATES(:,5).*STATES(:,7));
-    ALGEBRAIC(:,8) =  1.00000.*ALGEBRAIC(:,6)./CONSTANTS(:,63);
-    ALGEBRAIC(:,10) =  (STATES(:,1) - CONSTANTS(:,39))./abs(STATES(:,1) - CONSTANTS(:,39)).*CONSTANTS(:,41).*(exp( CONSTANTS(:,42).*abs(STATES(:,1) - CONSTANTS(:,39))) - 1.00000);
-    ALGEBRAIC(:,12) = piecewise({STATES(:,1)>CONSTANTS(:,38),  CONSTANTS(:,43).*(exp( CONSTANTS(:,44).*abs(STATES(:,1) - CONSTANTS(:,38))) - 1.00000) }, 0.00000);
-    ALGEBRAIC(:,14) = ALGEBRAIC(:,10)+ALGEBRAIC(:,12);
-    ALGEBRAIC(:,16) = piecewise({CONSTANTS(:,48)==1.00000,  CONSTANTS(:,47).*(CONSTANTS(:,40) - STATES(:,1)) }, 0.00000);
-    RATES(:,11) = CONSTANTS(:,64)+ALGEBRAIC(:,16) - (ALGEBRAIC(:,14)+ALGEBRAIC(:,8));
-    ALGEBRAIC(:,19) = exp(  - STATES(:,5)./abs(STATES(:,5)).*CONSTANTS(:,25).*STATES(:,5)./CONSTANTS(:,35) .^ 2.00000);
-    ALGEBRAIC(:,21) =  CONSTANTS(:,21).*ALGEBRAIC(:,19).*CONSTANTS(:,29).*CONSTANTS(:,32) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,20) = exp( (STATES(:,4) - CONSTANTS(:,35))./abs(STATES(:,4) - CONSTANTS(:,35)).*CONSTANTS(:,26).*(STATES(:,4) - CONSTANTS(:,35))./CONSTANTS(:,35) .^ 2.00000);
-    ALGEBRAIC(:,22) =  CONSTANTS(:,22).*ALGEBRAIC(:,20).*CONSTANTS(:,29).*CONSTANTS(:,33) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,23) = piecewise({STATES(:,4)<CONSTANTS(:,35), exp( CONSTANTS(:,27).*(CONSTANTS(:,35) - STATES(:,4))./CONSTANTS(:,35) .^ 2.00000) }, exp( CONSTANTS(:,28).*(STATES(:,4) - CONSTANTS(:,35))./CONSTANTS(:,35) .^ 2.00000));
-    ALGEBRAIC(:,24) =  CONSTANTS(:,23).*ALGEBRAIC(:,23).*CONSTANTS(:,29).*CONSTANTS(:,34) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,25) =  ALGEBRAIC(:,21).*STATES(:,7) - ( ALGEBRAIC(:,22).*STATES(:,6)+ ALGEBRAIC(:,24).*STATES(:,6));
-    RATES(:,6) = ALGEBRAIC(:,25);
-    ALGEBRAIC(:,26) = 1.00000 - STATES(:,10) - STATES(:,7) - STATES(:,6);
-    RATES(:,10) =  ALGEBRAIC(:,15).*ALGEBRAIC(:,26) -  ALGEBRAIC(:,11).*STATES(:,10);
-    ALGEBRAIC(:,17) = 1.00000+ (1.00000 - ALGEBRAIC(:,4)).*CONSTANTS(:,24);
-    ALGEBRAIC(:,18) =  CONSTANTS(:,20).*ALGEBRAIC(:,17).*CONSTANTS(:,29).*CONSTANTS(:,31) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,27) =  CONSTANTS(:,59).*ALGEBRAIC(:,26)+ ALGEBRAIC(:,22).*STATES(:,6) - ( ALGEBRAIC(:,18).*STATES(:,7)+ ALGEBRAIC(:,21).*STATES(:,7));
-    RATES(:,7) = ALGEBRAIC(:,27);
-    ALGEBRAIC(:,30) = piecewise({STATES(:,1)<=CONSTANTS(:,1)&STATES(:,1)>CONSTANTS(:,2), (STATES(:,11)+ (CONSTANTS(:,40) - STATES(:,1)).*CONSTANTS(:,46))./CONSTANTS(:,45) }, 0.00000);
-    RATES(:,1) = ALGEBRAIC(:,30);
-    ALGEBRAIC(:,28) = ( ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,24).*CONSTANTS(:,59))./( CONSTANTS(:,59).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,22).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,24).*CONSTANTS(:,59));
-    ALGEBRAIC(:,31) = ALGEBRAIC(:,30)./2.00000+ CONSTANTS(:,36)./ALGEBRAIC(:,28).*( CONSTANTS(:,59).* - STATES(:,5)+ ALGEBRAIC(:,22).*(STATES(:,4) - CONSTANTS(:,35)+STATES(:,5)));
-    RATES(:,5) = ALGEBRAIC(:,31);
-    ALGEBRAIC(:,29) =  CONSTANTS(:,59).*ALGEBRAIC(:,21)./( CONSTANTS(:,59).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,22).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,24).*CONSTANTS(:,59));
-    ALGEBRAIC(:,32) = ALGEBRAIC(:,30)./2.00000+ CONSTANTS(:,36)./ALGEBRAIC(:,29).*ALGEBRAIC(:,21).*(STATES(:,5)+CONSTANTS(:,35) - STATES(:,4));
-    RATES(:,4) = ALGEBRAIC(:,32);
-    ALGEBRAIC(:,41) = piecewise({VOI>CONSTANTS(:,53),  (CONSTANTS(:,54) - CONSTANTS(:,55))./CONSTANTS(:,61).*(exp( - (VOI - CONSTANTS(:,53))./CONSTANTS(:,51)) - exp( - (VOI - CONSTANTS(:,53))./CONSTANTS(:,52)))+CONSTANTS(:,55) }, CONSTANTS(:,55));
-    ALGEBRAIC(:,43) =  CONSTANTS(:,56).*ALGEBRAIC(:,41).*(1.00000 - STATES(:,2)) -  CONSTANTS(:,57).*STATES(:,2);
-    RATES(:,2) = ALGEBRAIC(:,43);
-    ALGEBRAIC(:,44) =  CONSTANTS(:,56).*ALGEBRAIC(:,41).*(1.00000 - STATES(:,3)) -  CONSTANTS(:,58).*STATES(:,3);
-    RATES(:,3) = ALGEBRAIC(:,44);
-   RATES = RATES';
-end
+def plot_model(voi, states, algebraic):
+    """Plot variables against variable of integration"""
+    import pylab
+    (legend_states, legend_algebraic, legend_voi, legend_constants) = createLegends()
+    pylab.figure(1)
+    pylab.plot(voi,vstack((states,algebraic)).T)
+    pylab.xlabel(legend_voi)
+    pylab.legend(legend_states + legend_algebraic, loc='best')
+    pylab.show()
 
-% Calculate algebraic variables
-function ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI)
-    ALGEBRAIC(:,1) = piecewise({CONSTANTS(:,4)./2.00000<STATES(:,1)./2.00000, CONSTANTS(:,4)./2.00000 }, STATES(:,1)./2.00000);
-    ALGEBRAIC(:,2) = piecewise({STATES(:,1)./2.00000 - (STATES(:,1) - CONSTANTS(:,3))>CONSTANTS(:,5)./2.00000, STATES(:,1)./2.00000 - (STATES(:,1) - CONSTANTS(:,3)) }, CONSTANTS(:,5)./2.00000);
-    ALGEBRAIC(:,3) = ALGEBRAIC(:,1) - ALGEBRAIC(:,2);
-    ALGEBRAIC(:,5) = ALGEBRAIC(:,3)./CONSTANTS(:,3);
-    ALGEBRAIC(:,7) =  (1.00000 - ALGEBRAIC(:,5)).*STATES(:,2)+ ALGEBRAIC(:,5).*STATES(:,3);
-    ALGEBRAIC(:,9) =  abs(1.00000./(1.00000+CONSTANTS(:,13)./ALGEBRAIC(:,7) .^ CONSTANTS(:,14))) .^ (1.0 / 2);
-    ALGEBRAIC(:,11) =  CONSTANTS(:,15).*ALGEBRAIC(:,9).*CONSTANTS(:,8) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,13) = piecewise({1.00000./ALGEBRAIC(:,9)<100.000, 1.00000./ALGEBRAIC(:,9) }, 100.000);
-    ALGEBRAIC(:,15) =  CONSTANTS(:,16).*ALGEBRAIC(:,13).*CONSTANTS(:,9) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,4) =  ALGEBRAIC(:,3).*2.00000./(CONSTANTS(:,4) - CONSTANTS(:,5));
-    ALGEBRAIC(:,6) =  CONSTANTS(:,37).*ALGEBRAIC(:,4).*( STATES(:,4).*STATES(:,6)+ STATES(:,5).*STATES(:,7));
-    ALGEBRAIC(:,8) =  1.00000.*ALGEBRAIC(:,6)./CONSTANTS(:,63);
-    ALGEBRAIC(:,10) =  (STATES(:,1) - CONSTANTS(:,39))./abs(STATES(:,1) - CONSTANTS(:,39)).*CONSTANTS(:,41).*(exp( CONSTANTS(:,42).*abs(STATES(:,1) - CONSTANTS(:,39))) - 1.00000);
-    ALGEBRAIC(:,12) = piecewise({STATES(:,1)>CONSTANTS(:,38),  CONSTANTS(:,43).*(exp( CONSTANTS(:,44).*abs(STATES(:,1) - CONSTANTS(:,38))) - 1.00000) }, 0.00000);
-    ALGEBRAIC(:,14) = ALGEBRAIC(:,10)+ALGEBRAIC(:,12);
-    ALGEBRAIC(:,16) = piecewise({CONSTANTS(:,48)==1.00000,  CONSTANTS(:,47).*(CONSTANTS(:,40) - STATES(:,1)) }, 0.00000);
-    ALGEBRAIC(:,19) = exp(  - STATES(:,5)./abs(STATES(:,5)).*CONSTANTS(:,25).*STATES(:,5)./CONSTANTS(:,35) .^ 2.00000);
-    ALGEBRAIC(:,21) =  CONSTANTS(:,21).*ALGEBRAIC(:,19).*CONSTANTS(:,29).*CONSTANTS(:,32) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,20) = exp( (STATES(:,4) - CONSTANTS(:,35))./abs(STATES(:,4) - CONSTANTS(:,35)).*CONSTANTS(:,26).*(STATES(:,4) - CONSTANTS(:,35))./CONSTANTS(:,35) .^ 2.00000);
-    ALGEBRAIC(:,22) =  CONSTANTS(:,22).*ALGEBRAIC(:,20).*CONSTANTS(:,29).*CONSTANTS(:,33) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,23) = piecewise({STATES(:,4)<CONSTANTS(:,35), exp( CONSTANTS(:,27).*(CONSTANTS(:,35) - STATES(:,4))./CONSTANTS(:,35) .^ 2.00000) }, exp( CONSTANTS(:,28).*(STATES(:,4) - CONSTANTS(:,35))./CONSTANTS(:,35) .^ 2.00000));
-    ALGEBRAIC(:,24) =  CONSTANTS(:,23).*ALGEBRAIC(:,23).*CONSTANTS(:,29).*CONSTANTS(:,34) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,25) =  ALGEBRAIC(:,21).*STATES(:,7) - ( ALGEBRAIC(:,22).*STATES(:,6)+ ALGEBRAIC(:,24).*STATES(:,6));
-    ALGEBRAIC(:,26) = 1.00000 - STATES(:,10) - STATES(:,7) - STATES(:,6);
-    ALGEBRAIC(:,17) = 1.00000+ (1.00000 - ALGEBRAIC(:,4)).*CONSTANTS(:,24);
-    ALGEBRAIC(:,18) =  CONSTANTS(:,20).*ALGEBRAIC(:,17).*CONSTANTS(:,29).*CONSTANTS(:,31) .^ (CONSTANTS(:,18) - 37.0000)./10.0000;
-    ALGEBRAIC(:,27) =  CONSTANTS(:,59).*ALGEBRAIC(:,26)+ ALGEBRAIC(:,22).*STATES(:,6) - ( ALGEBRAIC(:,18).*STATES(:,7)+ ALGEBRAIC(:,21).*STATES(:,7));
-    ALGEBRAIC(:,30) = piecewise({STATES(:,1)<=CONSTANTS(:,1)&STATES(:,1)>CONSTANTS(:,2), (STATES(:,11)+ (CONSTANTS(:,40) - STATES(:,1)).*CONSTANTS(:,46))./CONSTANTS(:,45) }, 0.00000);
-    ALGEBRAIC(:,28) = ( ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,24).*CONSTANTS(:,59))./( CONSTANTS(:,59).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,22).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,24).*CONSTANTS(:,59));
-    ALGEBRAIC(:,31) = ALGEBRAIC(:,30)./2.00000+ CONSTANTS(:,36)./ALGEBRAIC(:,28).*( CONSTANTS(:,59).* - STATES(:,5)+ ALGEBRAIC(:,22).*(STATES(:,4) - CONSTANTS(:,35)+STATES(:,5)));
-    ALGEBRAIC(:,29) =  CONSTANTS(:,59).*ALGEBRAIC(:,21)./( CONSTANTS(:,59).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,21)+ ALGEBRAIC(:,24).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,22).*CONSTANTS(:,59)+ ALGEBRAIC(:,22).*ALGEBRAIC(:,18)+ ALGEBRAIC(:,24).*CONSTANTS(:,59));
-    ALGEBRAIC(:,32) = ALGEBRAIC(:,30)./2.00000+ CONSTANTS(:,36)./ALGEBRAIC(:,29).*ALGEBRAIC(:,21).*(STATES(:,5)+CONSTANTS(:,35) - STATES(:,4));
-    ALGEBRAIC(:,41) = piecewise({VOI>CONSTANTS(:,53),  (CONSTANTS(:,54) - CONSTANTS(:,55))./CONSTANTS(:,61).*(exp( - (VOI - CONSTANTS(:,53))./CONSTANTS(:,51)) - exp( - (VOI - CONSTANTS(:,53))./CONSTANTS(:,52)))+CONSTANTS(:,55) }, CONSTANTS(:,55));
-    ALGEBRAIC(:,43) =  CONSTANTS(:,56).*ALGEBRAIC(:,41).*(1.00000 - STATES(:,2)) -  CONSTANTS(:,57).*STATES(:,2);
-    ALGEBRAIC(:,44) =  CONSTANTS(:,56).*ALGEBRAIC(:,41).*(1.00000 - STATES(:,3)) -  CONSTANTS(:,58).*STATES(:,3);
-    ALGEBRAIC(:,33) = (STATES(:,6)+STATES(:,7))./(CONSTANTS(:,62)+CONSTANTS(:,60));
-    ALGEBRAIC(:,34) = (ALGEBRAIC(:,25)+ALGEBRAIC(:,27))./(CONSTANTS(:,62)+CONSTANTS(:,60));
-    ALGEBRAIC(:,35) =  CONSTANTS(:,50).*( (1.00000 - ALGEBRAIC(:,5)).*STATES(:,2)+ ALGEBRAIC(:,5).*( ALGEBRAIC(:,33).*STATES(:,3)+ (1.00000 - ALGEBRAIC(:,33)).*STATES(:,2)));
-    ALGEBRAIC(:,36) = piecewise({STATES(:,1)<CONSTANTS(:,4),   - 0.500000.*ALGEBRAIC(:,30) }, 0.00000);
-    ALGEBRAIC(:,37) = piecewise({ 2.00000.*CONSTANTS(:,3) - STATES(:,1)>CONSTANTS(:,5),   - 0.500000.*ALGEBRAIC(:,30) }, 0.00000);
-    ALGEBRAIC(:,38) = ALGEBRAIC(:,36) - ALGEBRAIC(:,37);
-    ALGEBRAIC(:,39) = ALGEBRAIC(:,38)./CONSTANTS(:,3);
-    ALGEBRAIC(:,40) =  2.00000.*ALGEBRAIC(:,38)./(CONSTANTS(:,4) - CONSTANTS(:,5));
-    ALGEBRAIC(:,42) =  CONSTANTS(:,49).*ALGEBRAIC(:,40).*( STATES(:,4).*STATES(:,6)+ STATES(:,5).*STATES(:,7))+ CONSTANTS(:,49).*ALGEBRAIC(:,4).*( ALGEBRAIC(:,32).*STATES(:,6)+ STATES(:,4).*ALGEBRAIC(:,25)+ ALGEBRAIC(:,31).*STATES(:,7)+ STATES(:,5).*ALGEBRAIC(:,27));
-    ALGEBRAIC(:,45) =  CONSTANTS(:,50).*(  - ALGEBRAIC(:,39).*STATES(:,2)+ (1.00000 - ALGEBRAIC(:,5)).*ALGEBRAIC(:,43)+ ALGEBRAIC(:,39).*( ALGEBRAIC(:,33).*STATES(:,3)+ (1.00000 - ALGEBRAIC(:,33)).*STATES(:,2))+ ALGEBRAIC(:,5).*( ALGEBRAIC(:,34).*STATES(:,3)+ ALGEBRAIC(:,33).*ALGEBRAIC(:,44)+ (1.00000 - ALGEBRAIC(:,33)).*ALGEBRAIC(:,43) -  ALGEBRAIC(:,34).*STATES(:,2)));
-end
-
-% Compute result of a piecewise function
-function x = piecewise(cases, default)
-    set = [0];
-    for i = 1:2:length(cases)
-        if (length(cases{i+1}) == 1)
-            x(cases{i} & ~set,:) = cases{i+1};
-        else
-            x(cases{i} & ~set,:) = cases{i+1}(cases{i} & ~set);
-        end
-        set = set | cases{i};
-        if(set), break, end
-    end
-    if (length(default) == 1)
-        x(~set,:) = default;
-    else
-        x(~set,:) = default(~set);
-    end
-end
-
-% Pad out or shorten strings to a set length
-function strout = strpad(strin)
-    req_length = 160;
-    insize = size(strin,2);
-    if insize > req_length
-        strout = strin(1:req_length);
-    else
-        strout = [strin, blanks(req_length - insize)];
-    end
-end
-
+if __name__ == "__main__":
+    (voi, states, algebraic) = solve_model()
+    plot_model(voi, states, algebraic)
