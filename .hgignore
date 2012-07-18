@@ -2,10 +2,16 @@ syntax:glob
 *~
 .DS_Store
 *.orig
+meshes/*.mesh
+meshes/*.msh
+meshes/*.o
+meshes/*.pvd
+meshes/*.vtu
+meshes/*.xml
 notes/visco/visco.pdf
+output/*.avi
 output/*.pvd
 output/*.vtu
-output/*.avi
 
 syntax: regexp
 .*\#.*\#$
