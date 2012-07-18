@@ -8,6 +8,8 @@ meshes/*.o
 meshes/*.pvd
 meshes/*.vtu
 meshes/*.xml
+meshes/biventricle
+meshes/leftventricle
 notes/visco/visco.pdf
 output/*.avi
 output/*.pvd
