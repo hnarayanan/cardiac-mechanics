@@ -1,11 +1,10 @@
 from sympy import *
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import rc, rcParams
+from matplotlib import rc
 
 rc('text', usetex=True)
 rc('font', family='serif')
-# rcParams.update({'font.size': 22})
 
 # Declare useful symbols
 I1_bar, I2_bar, J, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar = \
@@ -27,7 +26,6 @@ psi_iso =  a/(2*b)*exp(b*(I1_bar - 3)) \
          + a_s/(2*b_s)*(exp(b_s*(I4_s_bar - 1)**2) - 1) \
          + a_fs/(2*b_fs)*(exp(b_fs*I8_fs_bar**2) - 1)
 psi_vol = kappa*(1/(beta**2)*(beta*ln(J) + 1/(J**beta) - 1))
-# psi_vol = kappa*(J*ln(J) - J + 1)
 
 # Identity Matrix
 I = eye(3)
@@ -82,68 +80,44 @@ dt = T/100
 gamma_max = 0.5
 times = np.arange(dt, T + dt, dt)
 
-# Constants related to viscoelasticity
-tau = 1.5
-beta_inf = 0.25
-xi = -dt/(2*tau)
+lmbda_a = 0.99
+F_a = lmbda_a*f0*f0.T + 1/sqrt(lmbda_a)*(s0*s0.T + n0*n0.T)
 
-# Loop over different shear directions
-directions = ['f', 's', 'n']
-for a in [0, 1, 2]:
-    for b in (set([0, 1, 2]) - set([a])):
+F = I
+F[1, 0] += gamma
 
-        # Deformation gradient for a simple shear
-        F = eye(3)
-        F[a, b] += gamma
+F = F*F_a.inv()
 
-        # Initialize matrices
-        S_vol_inf_store = [zeros(3)]
-        S_iso_inf_store = [zeros(3)]
-        Q_store = [zeros(3)]
-        S_store = [0.0]
-        gamma_store = [0.0]
+# Analytical values for the elastic stresses in terms of strain
+S_vol_inf, S_iso_inf = elastic_stresses(F)
 
-        # Analytical values for the elastic stresses in terms of strain
-        S_vol_inf, S_iso_inf = elastic_stresses(F)
+# Initialize lists to store results
+S_store = [0.0]
+gamma_store = [0.0]
 
-        # Subject the body to a known strain protocol and record the stresses
-        for t_n in times:
+# Subject the body to a known strain protocol and record the stresses
+for t_n in times:
 
-            # Load previous elastic stress states
-            S_vol_inf_p = S_vol_inf_store[-1]
-            S_iso_inf_p = S_iso_inf_store[-1]
-            Q_p = Q_store[-1]
+    # Compute current strain measures
+    gamma_n = gamma_max*sin(2*t_n/T*float(pi))
+    gamma_store.append(gamma_n)
 
-            # Compute current strain measures
-            gamma_n = gamma_max*sin(2*t_n/T*float(pi))
-            gamma_store.append(gamma_n)
+    # Update stress state
+    S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
+    S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
+    S_n = S_vol_inf_n + S_iso_inf_n
 
-            # Update stress state
-            S_vol_inf_n = S_vol_inf.subs({gamma:gamma_n})
-            S_iso_inf_n = S_iso_inf.subs({gamma:gamma_n})
-            H_p = exp(xi)*(exp(xi)*Q_p - beta_inf*S_iso_inf_p)
-            Q_n = beta_inf*exp(xi)*S_iso_inf_n + H_p
-            S_n = S_vol_inf_n + S_iso_inf_n + Q_n
+    # Convert to Cauchy stress for comparison with Dokos et al.
+    S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
 
-            # Convert to Cauchy stress for comparison with Dokos et al.
-            S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
+    # Store stress state at current time
+    S_store.append(S_n[1, 0])
 
-            # Store stress state at current time
-            S_vol_inf_store.append(S_vol_inf_n)
-            S_iso_inf_store.append(S_iso_inf_n)
-            Q_store.append(Q_n)
-            S_store.append(S_n[a, b])
-
-        # Plot the current stress-strain curve
-        plt.plot(gamma_store, S_store, label='%s%s'
-                 % (directions[b], directions[a]))
+    # Plot the current stress-strain curve
+    plt.plot(gamma_store, S_store)
 
 
 plt.legend(loc=(0.6, 0.6))
-plt.xlabel("Shear strain")
-plt.ylabel("Shear stress (kPa)")
-plt.xticks([-0.5, -0.3, -0.1, 0, 0.1, 0.3, 0.5])
-plt.yticks([-18, -12, -6, 0, 6, 12, 18])
-#plt.ylim(-18.2, 18.2)
-#plt.xlim(-0.52, 0.52)
+plt.xlabel("Some train")
+plt.ylabel("Some stress (kPa)")
 plt.show()
