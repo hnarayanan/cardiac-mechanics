@@ -2,6 +2,7 @@
 
 # Library imports and settings
 from dolfin import *
+import ufl; ufl.algorithms.preprocess.enable_profiling = True
 from numpy import array, arange
 parameters["form_compiler"]["name"] = "sfc"
 
