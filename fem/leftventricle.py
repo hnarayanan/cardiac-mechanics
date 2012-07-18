@@ -9,9 +9,9 @@ ffc_options = {
     # "optimize": True
 }
 
-mesh = Mesh("meshes/leftventricle.xml")
+mesh = Mesh("../meshes/leftventricle.xml")
 facet_regions = MeshFunction("uint", mesh,
-                             "meshes/leftventricle_facet_region.xml")
+                             "../meshes/leftventricle_facet_region.xml")
 regions = {"Endocardium": 1, "Base": 2, "Epicardium": 3}
 
 V = VectorFunctionSpace(mesh, "CG", 1)
