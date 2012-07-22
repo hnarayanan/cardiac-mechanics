@@ -6,7 +6,7 @@ from numpy import array, arange
 
 parameters["form_compiler"]["cpp_optimize"] = True
 ffc_options = {
-    "quadrature_degree": 5,
+    "quadrature_degree": 2,
     "eliminate_zeros": True,
     "precompute_basis_const": True,
     "precompute_ip_const": True
@@ -47,14 +47,20 @@ n = 10
 mesh = UnitCube(n, n, n)
 
 # Function spaces
-scalar = FunctionSpace(mesh, "Lagrange", 1)
-vector = VectorFunctionSpace(mesh, "Lagrange", 1)
-tensor = TensorFunctionSpace(mesh, "Lagrange", 1)
+scalar_DG0 = FunctionSpace(mesh, "DG", 0)
+vector_CG1 = VectorFunctionSpace(mesh, "Lagrange", 1)
+ME = MixedFunctionSpace([vector_CG1, scalar_DG0, scalar_DG0])
 
 # Functions
-du = TrialFunction(vector)            # Incremental displacement
-v  = TestFunction(vector)             # Test function
-u  = Function(vector)                 # Displacement from previous iteration
+dU = TrialFunction(ME)          # Incremental displacement
+V  = TestFunction(ME)           # Test function
+U  = Function(ME)               # Displacement from previous iteration
+
+u, p, Jbar = split(U)
+Jbar = variable(Jbar)
+v, q, theta = split(V)
+du, dp, dJbar = split(dU)
+
 
 # Define kinematics
 I = Identity(u.cell().d)    # Identity tensor
@@ -64,11 +70,15 @@ J = variable(det(F))        # Jacobian
 C_bar = J**(-2.0/3.0)*C     # Modified right Cauchy-Green tensor
 I1_bar = variable(tr(C_bar)) # First invariant
 
-S = S_iso(I1_bar, J) + S_vol(J)
-gamma = 0.1
+S = S_iso(I1_bar, J)# + S_vol(J)
 
-functional = inner(F*S, grad(v))*dx
-jac = derivative(functional, u, du)
+
+functional1 = inner(F*S, grad(v))*dx
+functional2 = (J - Jbar)*q*dx
+functional3 = (diff(psi_vol(Jbar), Jbar) - p)*theta*dx
+functional = functional1 + functional2 + functional3
+
+jac = derivative(functional, U, dU)
 
 # Boundary conditions
 back_condition   = "x[0] == 0.0 && on_boundary"
@@ -78,11 +88,11 @@ back, front = compile_subdomains([back_condition, front_condition])
 hold = Expression(("0.0", "0.0", "0.0"))
 
 shear = Expression(("0.0", "gamma", "0.0"), gamma=0.1)
-hold_back = DirichletBC(vector, hold, back)
-shear_front = DirichletBC(vector, shear, front)
+hold_back = DirichletBC(ME.sub(0), hold, back)
+shear_front = DirichletBC(ME.sub(0), shear, front)
 bcs = [hold_back, shear_front]
 
 # Solve the boundary value problem
-solve(functional == 0, u, bcs, J=jac)
+solve(functional == 0, U, bcs, J=jac)
 
 plot(u, interactive=True)
