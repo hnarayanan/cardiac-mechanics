@@ -1,0 +1,2322 @@
+<?xml version="1.0"?>
+<!--
+This CellML file was generated on 12/02/2009 at 21:11:33 using:
+
+COR (0.9.31.1073)
+Copyright 2002-2009 Dr Alan Garny
+http://COR.physiol.ox.ac.uk/ - COR@physiol.ox.ac.uk
+
+CellML 1.0 was used to generate this model
+http://www.CellML.org/
+--><model xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" cmeta:id="rice_model_2008" name="rice_model_2008">
+	<documentation xmlns="http://cellml.org/tmp-documentation">
+		<article>
+			<articleinfo>
+				<title>Approximate model of cooperative activation and crossbridge cycling in cardiac muscle using ordinary differential equations</title>
+				<author>
+					<firstname>Catherine</firstname>
+					<surname>Lloyd</surname>
+					<affiliation>
+						<shortaffil>Bioengineering Institute, University of Auckland</shortaffil>
+					</affiliation>
+				</author>
+			</articleinfo>
+			<sect1 id="sec_status">
+				<title>Model Status</title>
+				<para>
+       This cellML model is known to run in both PCEnv and COR.  The units have been checked and they are consistent.  This second version of the CellML model has been modified by Steve Niederer.  The CellML model was compared with Jeremy Rice's original Matlab code taken from his web page.  Changes to the CellML model include:  body temperature in the Rice Matlab code is acurate to 3sf ie body temp is 310 not 310.15.  Also in the Rice Matlab code derivative 12 the force integral is fixed to be zero.  To fix the CellML model Steve introduced: 
+</para>
+
+<para>       
+SEon = 1.0;
+To cellml model and change afterload definition to:
+if (SEon == 1)
+afterload = KSE*(SLset-Y(5));
+else
+afterload = 0.0;
+end;
+</para>
+
+<para> 
+and changed xbmodsp = 4/3 (which is the mouse specific modification for XB cycling rates)
+to xbmodsp = 1 (to represent the rat model and not the mouse)
+</para>
+
+<para>
+And finally Steve also reset all of the initial conditions after solving the model a coupl of times for 1000ms.
+         </para>
+         </sect1>
+         <sect1 id="sec_structure">
+				<title>Model Structure</title>
+				<para>
+Abstract: We develop a point model of the cardiac myofilament (MF) to simulate wide variety of experimental muscle characterizations including Force-Ca relations and twitches under isometric, isosarcometric, isotonic and auxotonic conditions. Complex MF behaviors are difficult to model because spatial interactions cannot be directly implemented as ordinary differential equations (ODEs). We therefore allow phenomenological approximations with careful consideration to the relationships with the underlying biophysical mechanisms. We describe new formulations that avoid mean-field approximations found in most existing MF models. To increase the scope and applicability of the model, we include length- and temperature-dependent effects that play important roles in MF response. We have also included a representation of passive restoring forces to simulate isolated cell shortening protocols. Possessing both computational efficiency and the ability to simulate a wide variety of muscle responses, the MF representation is well-suited for coupling to existing cardiac cell models of electrophysiology and Ca-handling mechanisms. To illustrate this suitability, the MF model is coupled to the Chicago rabbit cardiomyocyte model. The combined model generates realistic appearing action potentials, intracellular Ca transients, and cell shortening signals. The combined model also demonstrates that the feedback effects of force on Ca binding to troponin can modify the cystolic Ca transient.
+				</para>
+				<para>
+Note that the current CellMl model describes the rat model of myofilamentcontraction. One of the goals of the published work by Rice et al. was to develop a model of the myofilaments which could be coupled to existing models of cardiac electrophysiology and Ca-handling mechanisms.  Similarly, it is our intention to be able to couple the CellML model of myofilament contration with cardiac models of electrophysiology and calcium change. To achieve this we will first have to modify the rat myofilament model to convert it to a rabbit myofilament model. This can be achieved by decreasing the transition rates in the crossbridge cycle by a factor of 5 to simulate the changes in myosin isoforms (rat is predominately V1 while rabbit is V3) and species-based changes in rate.  We can then couple the model to the <ulink url="http://www.cellml.org/models/shannon_wang_puglisi_weber_bers_2004_version04">Chicago rabbit ventricular myocyte model</ulink> by using the cytosolic Ca concentration ([Ca]c) from the Chicago model as the input to the myofilament model.  Other minor modifications are also required, as described in the paper below:
+				</para>
+				<para>
+					<ulink url="http://www.biophysj.org/cgi/content/abstract/biophysj.107.119487v1">Approximate model of cooperative activation and crossbridge cycling in cardiac muscle using ordinary differential equations</ulink>, John Jeremy Rice, Fei Wang, Donald M. Bers and Pieter P. de Tombe, 2008, <ulink url="http://www.biophysj.org/">
+						<emphasis>Biophysical Journal</emphasis>
+					</ulink>.  (A <ulink url="http://www.biophysj.org/cgi/rapidpdf/biophysj.107.119487v1">PDF</ulink> version of the article is available to journal subscribers on the <emphasis>Biophysical Journal</emphasis> website.)  <ulink url="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&amp;cmd=Retrieve&amp;dopt=AbstractPlus&amp;list_uids=18234826&amp;query_hl=1&amp;itool=pubmed_docsum">PubMed ID: 18234826</ulink>
+				</para>
+				<informalfigure float="0" id="fig_reaction_diagram">
+					<mediaobject>
+						<imageobject>
+							<objectinfo>
+								<title>model diagram</title>
+							</objectinfo>
+							<imagedata fileref="rice_2008.png"/>
+						</imageobject>
+					</mediaobject>
+					<caption>Schematic diagram of the model.</caption>
+				</informalfigure>
+			</sect1>
+		</article>
+	</documentation>
+	   <units base_units="yes" name="unit_normalised_force"/>
+  <units name="unit_normalised_force_millisecond2_per_micrometre">
+     <unit units="unit_normalised_force"/>
+     <unit exponent="2" units="millisecond"/>
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="unit_normalised_force_millisecond">
+     <unit units="unit_normalised_force"/>
+     <unit units="millisecond"/>
+  </units>
+  <units name="unit_normalised_force_millisecond_per_micrometre">
+     <unit units="unit_normalised_force"/>
+     <unit units="millisecond"/>
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="unit_normalised_force_per_micrometre">
+     <unit units="unit_normalised_force"/>
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="micrometre">
+     <unit prefix="micro" units="metre"/>
+  </units>
+  <units name="per_micrometre">
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="micrometre_per_millisecond">
+     <unit units="micrometre"/>
+     <unit exponent="-1" units="millisecond"/>
+  </units>
+  <units name="millisecond_per_micrometre">
+     <unit units="millisecond"/>
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="millisecond">
+     <unit prefix="milli" units="second"/>
+  </units>
+  <units name="millisecond2_per_micrometre">
+     <unit exponent="2" units="millisecond"/>
+     <unit exponent="-1" units="micrometre"/>
+  </units>
+  <units name="micromolar">
+     <unit prefix="micro" units="mole"/>
+     <unit exponent="-1" units="litre"/>
+  </units>
+  <units name="micromolar_per_millisecond">
+     <unit units="micromolar"/>
+     <unit exponent="-1" units="millisecond"/>
+  </units>
+  <units name="first_order_rate_constant">
+     <unit exponent="-1" units="millisecond"/>
+  </units>
+  <units name="second_order_rate_constant">
+     <unit exponent="-1" units="micromolar"/>
+     <unit exponent="-1" units="millisecond"/>
+  </units>
+  <units name="millinewton_per_millimetre2">
+     <unit prefix="milli" units="newton"/>
+     <unit exponent="-2" prefix="milli" units="metre"/>
+  </units>
+  <units name="millinewton_micrometre_per_millimetre2">
+     <unit prefix="milli" units="newton"/>
+     <unit prefix="micro" units="metre"/>
+     <unit exponent="-2" prefix="milli" units="metre"/>
+  </units>
+  <units name="millinewton_micrometre_per_millimetre2_per_millisecond">
+     <unit prefix="milli" units="newton"/>
+     <unit prefix="micro" units="metre"/>
+     <unit exponent="-2" prefix="milli" units="metre"/>
+     <unit exponent="-1" prefix="milli" units="second"/>
+  </units>
+  <component name="environment">
+     <variable name="time" public_interface="out" units="millisecond"/>
+  </component>
+  <component name="sarcomere_geometry">
+     <variable name="SOVFThick" public_interface="out" units="dimensionless"/>
+     <variable name="SOVFThin" public_interface="out" units="dimensionless"/>
+     <variable name="sovr_ze" units="micrometre"/>
+     <variable name="sovr_cle" units="micrometre"/>
+     <variable name="len_sovr" units="micrometre"/>
+     <variable name="SLmax" public_interface="in" units="micrometre"/>
+     <variable name="SLmin" public_interface="in" units="micrometre"/>
+     <variable name="len_thin" public_interface="in" units="micrometre"/>
+     <variable name="len_thick" public_interface="in" units="micrometre"/>
+     <variable name="len_hbare" public_interface="in" units="micrometre"/>
+     <variable name="SL" public_interface="in" units="micrometre"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <ci>sovr_ze</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <divide/>
+                    <ci>len_thick</ci>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 </apply>
+                 <apply>
+                    <lt/>
+                    <apply>
+                       <divide/>
+                       <ci>len_thick</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                    </apply>
+                    <apply>
+                       <divide/>
+                       <ci>SL</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                    </apply>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <apply>
+                    <divide/>
+                    <ci>SL</ci>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 </apply>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>sovr_cle</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <minus/>
+                    <apply>
+                       <divide/>
+                       <ci>SL</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                    </apply>
+                    <apply>
+                       <minus/>
+                       <ci>SL</ci>
+                       <ci>len_thin</ci>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <gt/>
+                    <apply>
+                       <minus/>
+                       <apply>
+                          <divide/>
+                          <ci>SL</ci>
+                          <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                       </apply>
+                       <apply>
+                          <minus/>
+                          <ci>SL</ci>
+                          <ci>len_thin</ci>
+                       </apply>
+                    </apply>
+                    <apply>
+                       <divide/>
+                       <ci>len_hbare</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                    </apply>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <apply>
+                    <divide/>
+                    <ci>len_hbare</ci>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 </apply>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>len_sovr</ci>
+           <apply>
+              <minus/>
+              <ci>sovr_ze</ci>
+              <ci>sovr_cle</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>SOVFThick</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <times/>
+                 <ci>len_sovr</ci>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+              </apply>
+              <apply>
+                 <minus/>
+                 <ci>len_thick</ci>
+                 <ci>len_hbare</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>SOVFThin</ci>
+           <apply>
+              <divide/>
+              <ci>len_sovr</ci>
+              <ci>len_thin</ci>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="Ca_binding_to_troponin_to_thin_filament_regulation">
+     <variable initial_value="0.0147730085063734" name="TRPNCaL" public_interface="out" units="dimensionless"/>
+     <variable initial_value="0.13066096561522" name="TRPNCaH" public_interface="out" units="dimensionless"/>
+     <variable name="dTRPNCaL" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="dTRPNCaH" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="kn_pT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="kp_nT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="konT" units="second_order_rate_constant"/>
+     <variable name="koffLT" units="first_order_rate_constant"/>
+     <variable name="koffHT" units="first_order_rate_constant"/>
+     <variable initial_value="1.5" name="Qkon" units="dimensionless"/>
+     <variable initial_value="1.3" name="Qkoff" units="dimensionless"/>
+     <variable initial_value="1.6" name="Qkn_p" units="dimensionless"/>
+     <variable initial_value="1.6" name="Qkp_n" units="dimensionless"/>
+     <variable initial_value="0.05" name="kon" units="second_order_rate_constant"/>
+     <variable initial_value="0.25" name="koffL" units="first_order_rate_constant"/>
+     <variable initial_value="0.025" name="koffH" units="first_order_rate_constant"/>
+     <variable initial_value="0.5" name="perm50" units="dimensionless"/>
+     <variable initial_value="15" name="nperm" units="dimensionless"/>
+     <variable initial_value="0.5" name="kn_p" units="first_order_rate_constant"/>
+     <variable initial_value="0.05" name="kp_n" units="first_order_rate_constant"/>
+     <variable initial_value="1" name="koffmod" units="dimensionless"/>
+     <variable name="Tropreg" units="dimensionless"/>
+     <variable name="permtot" units="dimensionless"/>
+     <variable name="inprmt" units="dimensionless"/>
+     <variable name="time" public_interface="in" units="millisecond"/>
+     <variable name="TmpC" public_interface="in" units="celsius"/>
+     <variable name="Cai" public_interface="in" units="micromolar"/>
+     <variable name="SOVFThin" public_interface="in" units="dimensionless"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <ci>konT</ci>
+           <apply>
+              <times/>
+              <ci>kon</ci>
+              <apply>
+                 <power/>
+                 <ci>Qkon</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>koffLT</ci>
+           <apply>
+              <times/>
+              <ci>koffL</ci>
+              <ci>koffmod</ci>
+              <apply>
+                 <power/>
+                 <ci>Qkoff</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>koffHT</ci>
+           <apply>
+              <times/>
+              <ci>koffH</ci>
+              <ci>koffmod</ci>
+              <apply>
+                 <power/>
+                 <ci>Qkoff</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>kn_pT</ci>
+           <apply>
+              <times/>
+              <ci>kn_p</ci>
+              <ci>permtot</ci>
+              <apply>
+                 <power/>
+                 <ci>Qkn_p</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>kp_nT</ci>
+           <apply>
+              <times/>
+              <ci>kp_n</ci>
+              <ci>inprmt</ci>
+              <apply>
+                 <power/>
+                 <ci>Qkp_n</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>permtot</ci>
+           <apply>
+              <root/>
+              <apply>
+                 <abs/>
+                 <apply>
+                    <divide/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <apply>
+                       <plus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                       <apply>
+                          <power/>
+                          <apply>
+                             <divide/>
+                             <ci>perm50</ci>
+                             <ci>Tropreg</ci>
+                          </apply>
+                          <ci>nperm</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>inprmt</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <divide/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>permtot</ci>
+                 </apply>
+                 <apply>
+                    <lt/>
+                    <apply>
+                       <divide/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                       <ci>permtot</ci>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">100</cn>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">100</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>TRPNCaL</ci>
+           </apply>
+           <ci>dTRPNCaL</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dTRPNCaL</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>konT</ci>
+                 <ci>Cai</ci>
+                 <apply>
+                    <minus/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>TRPNCaL</ci>
+                 </apply>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>koffLT</ci>
+                 <ci>TRPNCaL</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>TRPNCaH</ci>
+           </apply>
+           <ci>dTRPNCaH</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dTRPNCaH</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>konT</ci>
+                 <ci>Cai</ci>
+                 <apply>
+                    <minus/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>TRPNCaH</ci>
+                 </apply>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>koffHT</ci>
+                 <ci>TRPNCaH</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>Tropreg</ci>
+           <apply>
+              <plus/>
+              <apply>
+                 <times/>
+                 <apply>
+                    <minus/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>SOVFThin</ci>
+                 </apply>
+                 <ci>TRPNCaL</ci>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>SOVFThin</ci>
+                 <ci>TRPNCaH</ci>
+              </apply>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="thin_filament_regulation_and_crossbridge_cycling_rates">
+     <variable name="fappT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="gappT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="hfT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="hbT" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="gxbT" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="0.5" name="fapp" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="0.07" name="gapp" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="2" name="hf" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="0.4" name="hb" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="0.07" name="gxb" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="6" name="gslmod" units="dimensionless"/>
+     <variable name="hfmd" units="dimensionless"/>
+     <variable name="hbmd" units="dimensionless"/>
+     <variable initial_value="5" name="hfmdc" units="dimensionless"/>
+     <variable initial_value="0" name="hbmdc" units="dimensionless"/>
+     <variable initial_value="8" name="sigmap" units="dimensionless"/>
+     <variable initial_value="1" name="sigman" units="dimensionless"/>
+     <variable initial_value="1" name="xbmodsp" units="dimensionless"/>
+     <variable initial_value="6.25" name="Qfapp" units="dimensionless"/>
+     <variable initial_value="2.5" name="Qgapp" units="dimensionless"/>
+     <variable initial_value="6.25" name="Qhf" units="dimensionless"/>
+     <variable initial_value="6.25" name="Qhb" units="dimensionless"/>
+     <variable initial_value="6.25" name="Qgxb" units="dimensionless"/>
+     <variable name="gxbmd" units="dimensionless"/>
+     <variable name="gapslmd" units="dimensionless"/>
+     <variable name="x_0" public_interface="in" units="micrometre"/>
+     <variable name="TmpC" public_interface="in" units="celsius"/>
+     <variable name="SOVFThick" public_interface="in" units="dimensionless"/>
+     <variable name="xXBpostr" public_interface="in" units="micrometre"/>
+     <variable name="xXBprer" public_interface="in" units="micrometre"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <ci>fappT</ci>
+           <apply>
+              <times/>
+              <ci>fapp</ci>
+              <ci>xbmodsp</ci>
+              <apply>
+                 <power/>
+                 <ci>Qfapp</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>gapslmd</ci>
+           <apply>
+              <plus/>
+              <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+              <apply>
+                 <times/>
+                 <apply>
+                    <minus/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>SOVFThick</ci>
+                 </apply>
+                 <ci>gslmod</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>gappT</ci>
+           <apply>
+              <times/>
+              <ci>gapp</ci>
+              <ci>gapslmd</ci>
+              <ci>xbmodsp</ci>
+              <apply>
+                 <power/>
+                 <ci>Qgapp</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>hfmd</ci>
+           <apply>
+              <exp/>
+              <apply>
+                 <times/>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>xXBprer</ci>
+                    </apply>
+                    <apply>
+                       <abs/>
+                       <ci>xXBprer</ci>
+                    </apply>
+                 </apply>
+                 <ci>hfmdc</ci>
+                 <apply>
+                    <power/>
+                    <apply>
+                       <divide/>
+                       <ci>xXBprer</ci>
+                       <ci>x_0</ci>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>hbmd</ci>
+           <apply>
+              <exp/>
+              <apply>
+                 <times/>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>xXBpostr</ci>
+                       <ci>x_0</ci>
+                    </apply>
+                    <apply>
+                       <abs/>
+                       <apply>
+                          <minus/>
+                          <ci>xXBpostr</ci>
+                          <ci>x_0</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+                 <ci>hbmdc</ci>
+                 <apply>
+                    <power/>
+                    <apply>
+                       <divide/>
+                       <apply>
+                          <minus/>
+                          <ci>xXBpostr</ci>
+                          <ci>x_0</ci>
+                       </apply>
+                       <ci>x_0</ci>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>hfT</ci>
+           <apply>
+              <times/>
+              <ci>hf</ci>
+              <ci>hfmd</ci>
+              <ci>xbmodsp</ci>
+              <apply>
+                 <power/>
+                 <ci>Qhf</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>hbT</ci>
+           <apply>
+              <times/>
+              <ci>hb</ci>
+              <ci>hbmd</ci>
+              <ci>xbmodsp</ci>
+              <apply>
+                 <power/>
+                 <ci>Qhb</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>gxbmd</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <exp/>
+                    <apply>
+                       <times/>
+                       <ci>sigmap</ci>
+                       <apply>
+                          <power/>
+                          <apply>
+                             <divide/>
+                             <apply>
+                                <minus/>
+                                <ci>x_0</ci>
+                                <ci>xXBpostr</ci>
+                             </apply>
+                             <ci>x_0</ci>
+                          </apply>
+                          <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                       </apply>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <lt/>
+                    <ci>xXBpostr</ci>
+                    <ci>x_0</ci>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <apply>
+                    <exp/>
+                    <apply>
+                       <times/>
+                       <ci>sigman</ci>
+                       <apply>
+                          <power/>
+                          <apply>
+                             <divide/>
+                             <apply>
+                                <minus/>
+                                <ci>xXBpostr</ci>
+                                <ci>x_0</ci>
+                             </apply>
+                             <ci>x_0</ci>
+                          </apply>
+                          <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                       </apply>
+                    </apply>
+                 </apply>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>gxbT</ci>
+           <apply>
+              <times/>
+              <ci>gxb</ci>
+              <ci>gxbmd</ci>
+              <ci>xbmodsp</ci>
+              <apply>
+                 <power/>
+                 <ci>Qgxb</ci>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <ci>TmpC</ci>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">37</cn>
+                    </apply>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="celsius">10</cn>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="regulation_and_crossbridge_cycling_state_equations">
+     <variable initial_value="1.81017564383744e-6" name="XBpostr" public_interface="out" units="dimensionless"/>
+     <variable initial_value="3.0494964880038e-7" name="XBprer" public_interface="out" units="dimensionless"/>
+     <variable name="dXBpostr" public_interface="out" units="first_order_rate_constant"/>
+     <variable name="dXBprer" public_interface="out" units="first_order_rate_constant"/>
+     <variable initial_value="0.999999959256274" name="N_NoXB" units="dimensionless"/>
+     <variable initial_value="4.07437173988636e-8" name="P_NoXB" units="dimensionless"/>
+     <variable name="P" units="dimensionless"/>
+     <variable initial_value="0.999997834540066" name="N" units="dimensionless"/>
+     <variable name="time" public_interface="in" units="millisecond"/>
+     <variable name="fappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hfT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hbT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gxbT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="kn_pT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="kp_nT" public_interface="in" units="first_order_rate_constant"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>N_NoXB</ci>
+           </apply>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>kp_nT</ci>
+                 <ci>P_NoXB</ci>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>kn_pT</ci>
+                 <ci>N_NoXB</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>P_NoXB</ci>
+           </apply>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>kn_pT</ci>
+                 <ci>N_NoXB</ci>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>kp_nT</ci>
+                 <ci>P_NoXB</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>N</ci>
+           </apply>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>kp_nT</ci>
+                 <ci>P</ci>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>kn_pT</ci>
+                 <ci>N</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>XBprer</ci>
+           </apply>
+           <ci>dXBprer</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dXBprer</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>fappT</ci>
+                    <ci>P</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>XBpostr</ci>
+                 </apply>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>gappT</ci>
+                    <ci>XBprer</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hfT</ci>
+                    <ci>XBprer</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>XBpostr</ci>
+           </apply>
+           <ci>dXBpostr</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dXBpostr</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <times/>
+                 <ci>hfT</ci>
+                 <ci>XBprer</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>XBpostr</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>XBpostr</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>P</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <minus/>
+                 <apply>
+                    <minus/>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    <ci>N</ci>
+                 </apply>
+                 <ci>XBprer</ci>
+              </apply>
+              <ci>XBpostr</ci>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="mean_strain_of_strongly_bound_states">
+     <variable initial_value="0.00700005394873882" name="xXBpostr" public_interface="out" units="micrometre"/>
+     <variable initial_value="3.41212828972468e-8" name="xXBprer" public_interface="out" units="micrometre"/>
+     <variable name="dxXBpostr" public_interface="out" units="micrometre_per_millisecond"/>
+     <variable name="dxXBprer" public_interface="out" units="micrometre_per_millisecond"/>
+     <variable initial_value="2" name="xPsi" units="dimensionless"/>
+     <variable name="dutyprer" units="dimensionless"/>
+     <variable name="dutypostr" units="dimensionless"/>
+     <variable name="time" public_interface="in" units="millisecond"/>
+     <variable name="dSL" public_interface="in" units="micrometre_per_millisecond"/>
+     <variable name="x_0" public_interface="in" units="micrometre"/>
+     <variable name="fappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hfT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hbT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gxbT" public_interface="in" units="first_order_rate_constant"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>xXBprer</ci>
+           </apply>
+           <ci>dxXBprer</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dxXBprer</ci>
+           <apply>
+              <plus/>
+              <apply>
+                 <divide/>
+                 <ci>dSL</ci>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+              </apply>
+              <apply>
+                 <times/>
+                 <apply>
+                    <divide/>
+                    <ci>xPsi</ci>
+                    <ci>dutyprer</ci>
+                 </apply>
+                 <apply>
+                    <plus/>
+                    <apply>
+                       <times/>
+                       <ci>fappT</ci>
+                       <apply>
+                          <minus/>
+                          <ci>xXBprer</ci>
+                       </apply>
+                    </apply>
+                    <apply>
+                       <times/>
+                       <ci>hbT</ci>
+                       <apply>
+                          <minus/>
+                          <ci>xXBpostr</ci>
+                          <apply>
+                             <plus/>
+                             <ci>x_0</ci>
+                             <ci>xXBprer</ci>
+                          </apply>
+                       </apply>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>xXBpostr</ci>
+           </apply>
+           <ci>dxXBpostr</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dxXBpostr</ci>
+           <apply>
+              <plus/>
+              <apply>
+                 <divide/>
+                 <ci>dSL</ci>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+              </apply>
+              <apply>
+                 <times/>
+                 <apply>
+                    <divide/>
+                    <ci>xPsi</ci>
+                    <ci>dutypostr</ci>
+                 </apply>
+                 <ci>hfT</ci>
+                 <apply>
+                    <minus/>
+                    <apply>
+                       <plus/>
+                       <ci>xXBprer</ci>
+                       <ci>x_0</ci>
+                    </apply>
+                    <ci>xXBpostr</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dutyprer</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>fappT</ci>
+                    <ci>hfT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>hfT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>gappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>gappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dutypostr</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <times/>
+                 <ci>fappT</ci>
+                 <ci>hfT</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>fappT</ci>
+                    <ci>hfT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>hfT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>gappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hbT</ci>
+                    <ci>gappT</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxbT</ci>
+                    <ci>fappT</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="normalised_active_and_passive_force">
+     <variable name="SSXBpostr" public_interface="out" units="dimensionless"/>
+     <variable name="SSXBprer" public_interface="out" units="dimensionless"/>
+     <variable name="dSL" public_interface="out" units="micrometre_per_millisecond"/>
+     <variable initial_value="1.89999811516093" name="SL" public_interface="out" units="micrometre"/>
+     <variable initial_value="1.4" name="SLmin" public_interface="out" units="micrometre"/>
+     <variable initial_value="2.4" name="SLmax" public_interface="out" units="micrometre"/>
+     <variable initial_value="120" name="kxb" units="millinewton_per_millimetre2"/>
+     <variable name="Fnordv" units="millinewton_micrometre_per_millimetre2"/>
+     <variable name="force" units="millinewton_micrometre_per_millimetre2"/>
+     <variable name="active" units="unit_normalised_force"/>
+     <variable name="ppforce" units="unit_normalised_force"/>
+     <variable name="ppforce_t" units="unit_normalised_force"/>
+     <variable name="ppforce_c" units="unit_normalised_force"/>
+     <variable name="preload" units="unit_normalised_force"/>
+     <variable name="afterload" units="unit_normalised_force"/>
+     <variable initial_value="-4.5113452510363e-6" name="intf" units="unit_normalised_force_millisecond"/>
+     <variable initial_value="2.25" name="SL_c" units="micrometre"/>
+     <variable initial_value="1.85" name="SLrest" units="micrometre"/>
+     <variable initial_value="1.9" name="SLset" units="micrometre"/>
+     <variable initial_value="0.002" name="PCon_t" units="unit_normalised_force"/>
+     <variable initial_value="10" name="PExp_t" units="per_micrometre"/>
+     <variable initial_value="0.02" name="PCon_c" units="unit_normalised_force"/>
+     <variable initial_value="70" name="PExp_c" units="per_micrometre"/>
+     <variable initial_value="50" name="massf" units="unit_normalised_force_millisecond2_per_micrometre"/>
+     <variable initial_value="3" name="visc" units="unit_normalised_force_millisecond_per_micrometre"/>
+     <variable initial_value="1" name="KSE" units="unit_normalised_force_per_micrometre"/>
+     <variable name="x_0" public_interface="in" units="micrometre"/>
+     <variable name="fapp" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gapp" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hf" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hb" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gxb" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="time" public_interface="in" units="millisecond"/>
+     <variable name="fappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gappT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hfT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="hbT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="gxbT" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="XBpostr" public_interface="in" units="dimensionless"/>
+     <variable name="XBprer" public_interface="in" units="dimensionless"/>
+     <variable name="xXBpostr" public_interface="in" units="micrometre"/>
+     <variable name="xXBprer" public_interface="in" units="micrometre"/>
+     <variable name="SOVFThick" public_interface="in" units="dimensionless"/>
+     <variable initial_value="1" name="SEon" units="dimensionless"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+
+           <ci>SSXBprer</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>hb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>fapp</ci>
+                    <ci>hf</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>hf</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>gapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hb</ci>
+                    <ci>gapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>SSXBpostr</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <times/>
+                 <ci>fapp</ci>
+                 <ci>hf</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>fapp</ci>
+                    <ci>hf</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>hf</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>gapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>hb</ci>
+                    <ci>gapp</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>gxb</ci>
+                    <ci>fapp</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>Fnordv</ci>
+           <apply>
+              <times/>
+              <ci>kxb</ci>
+              <ci>x_0</ci>
+              <ci>SSXBpostr</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>force</ci>
+           <apply>
+              <times/>
+              <ci>kxb</ci>
+              <ci>SOVFThick</ci>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <ci>xXBpostr</ci>
+                    <ci>XBpostr</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>xXBprer</ci>
+                    <ci>XBprer</ci>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>active</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <times/>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="unit_normalised_force">1</cn>
+                 <ci>force</ci>
+              </apply>
+              <ci>Fnordv</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>ppforce_t</ci>
+           <apply>
+              <times/>
+              <apply>
+                 <divide/>
+                 <apply>
+                    <minus/>
+                    <ci>SL</ci>
+                    <ci>SLrest</ci>
+                 </apply>
+                 <apply>
+                    <abs/>
+                    <apply>
+                       <minus/>
+                       <ci>SL</ci>
+                       <ci>SLrest</ci>
+                    </apply>
+                 </apply>
+              </apply>
+              <ci>PCon_t</ci>
+              <apply>
+                 <minus/>
+                 <apply>
+                    <exp/>
+                    <apply>
+                       <times/>
+                       <ci>PExp_t</ci>
+                       <apply>
+                          <abs/>
+                          <apply>
+                             <minus/>
+                             <ci>SL</ci>
+                             <ci>SLrest</ci>
+                          </apply>
+                       </apply>
+                    </apply>
+                 </apply>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>ppforce_c</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <times/>
+                    <ci>PCon_c</ci>
+                    <apply>
+                       <minus/>
+                       <apply>
+                          <exp/>
+                          <apply>
+                             <times/>
+                             <ci>PExp_c</ci>
+                             <apply>
+                                <abs/>
+                                <apply>
+                                   <minus/>
+                                   <ci>SL</ci>
+                                   <ci>SL_c</ci>
+                                </apply>
+                             </apply>
+                          </apply>
+                       </apply>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <gt/>
+                    <ci>SL</ci>
+                    <ci>SL_c</ci>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="unit_normalised_force">0</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>ppforce</ci>
+           <apply>
+              <plus/>
+              <ci>ppforce_t</ci>
+              <ci>ppforce_c</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>preload</ci>
+           <apply>
+              <times/>
+              <apply>
+                 <divide/>
+                 <apply>
+                    <abs/>
+                    <apply>
+                       <minus/>
+                       <ci>SLset</ci>
+                       <ci>SLrest</ci>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <minus/>
+                    <ci>SLset</ci>
+                    <ci>SLrest</ci>
+                 </apply>
+              </apply>
+              <ci>PCon_t</ci>
+              <apply>
+                 <minus/>
+                 <apply>
+                    <exp/>
+                    <apply>
+                       <times/>
+                       <ci>PExp_t</ci>
+                       <apply>
+                          <abs/>
+                          <apply>
+                             <minus/>
+                             <ci>SLset</ci>
+                             <ci>SLrest</ci>
+                          </apply>
+                       </apply>
+                    </apply>
+                 </apply>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>afterload</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <times/>
+                    <ci>KSE</ci>
+                    <apply>
+                       <minus/>
+                       <ci>SLset</ci>
+                       <ci>SL</ci>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <eq/>
+                    <ci>SEon</ci>
+                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="unit_normalised_force">0</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>SL</ci>
+           </apply>
+           <ci>dSL</ci>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dSL</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <plus/>
+                       <ci>intf</ci>
+                       <apply>
+                          <times/>
+                          <apply>
+                             <minus/>
+                             <ci>SLset</ci>
+                             <ci>SL</ci>
+                          </apply>
+                          <ci>visc</ci>
+                       </apply>
+                    </apply>
+                    <ci>massf</ci>
+                 </apply>
+                 <apply>
+                    <and/>
+                    <apply>
+                       <leq/>
+                       <ci>SL</ci>
+                       <ci>SLmax</ci>
+                    </apply>
+                    <apply>
+                       <gt/>
+                       <ci>SL</ci>
+                       <ci>SLmin</ci>
+                    </apply>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre_per_millisecond">0</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <apply>
+              <diff/>
+              <bvar>
+                 <ci>time</ci>
+              </bvar>
+              <ci>intf</ci>
+           </apply>
+           <apply>
+              <minus/>
+              <apply>
+                 <plus/>
+                 <ci>preload</ci>
+                 <ci>afterload</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <ci>ppforce</ci>
+                 <ci>active</ci>
+              </apply>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding">
+     <variable name="FrSBXB" units="dimensionless"/>
+     <variable name="dFrSBXB" units="first_order_rate_constant"/>
+     <variable name="dsovr_ze" units="micrometre_per_millisecond"/>
+     <variable name="dsovr_cle" units="micrometre_per_millisecond"/>
+     <variable name="dlen_sovr" units="micrometre_per_millisecond"/>
+     <variable name="dSOVFThick" units="first_order_rate_constant"/>
+     <variable name="dSOVFThin" units="first_order_rate_constant"/>
+     <variable initial_value="120" name="kxb" units="millinewton_per_millimetre2"/>
+     <variable name="dforce" units="millinewton_micrometre_per_millimetre2_per_millisecond"/>
+     <variable initial_value="70" name="Trop_conc" units="micromolar"/>
+     <variable name="TropTot" units="micromolar"/>
+     <variable name="dTropTot" units="micromolar_per_millisecond"/>
+     <variable name="dSL" public_interface="in" units="micrometre_per_millisecond"/>
+     <variable name="SL" public_interface="in" units="micrometre"/>
+     <variable name="dXBpostr" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="dXBprer" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="dxXBpostr" public_interface="in" units="micrometre_per_millisecond"/>
+     <variable name="dxXBprer" public_interface="in" units="micrometre_per_millisecond"/>
+     <variable name="XBpostr" public_interface="in" units="dimensionless"/>
+     <variable name="XBprer" public_interface="in" units="dimensionless"/>
+     <variable name="xXBpostr" public_interface="in" units="micrometre"/>
+     <variable name="xXBprer" public_interface="in" units="micrometre"/>
+     <variable name="SSXBpostr" public_interface="in" units="dimensionless"/>
+     <variable name="SSXBprer" public_interface="in" units="dimensionless"/>
+     <variable name="SOVFThick" public_interface="in" units="dimensionless"/>
+     <variable name="SOVFThin" public_interface="in" units="dimensionless"/>
+     <variable name="len_thin" public_interface="in" units="micrometre"/>
+     <variable name="len_thick" public_interface="in" units="micrometre"/>
+     <variable name="len_hbare" public_interface="in" units="micrometre"/>
+     <variable name="TRPNCaL" public_interface="in" units="dimensionless"/>
+     <variable name="TRPNCaH" public_interface="in" units="dimensionless"/>
+     <variable name="dTRPNCaL" public_interface="in" units="first_order_rate_constant"/>
+     <variable name="dTRPNCaH" public_interface="in" units="first_order_rate_constant"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <ci>FrSBXB</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <plus/>
+                 <ci>XBpostr</ci>
+                 <ci>XBprer</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <ci>SSXBpostr</ci>
+                 <ci>SSXBprer</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dFrSBXB</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <plus/>
+                 <ci>dXBpostr</ci>
+                 <ci>dXBprer</ci>
+              </apply>
+              <apply>
+                 <plus/>
+                 <ci>SSXBpostr</ci>
+                 <ci>SSXBprer</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dsovr_ze</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <times/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0.5</cn>
+                    </apply>
+                    <ci>dSL</ci>
+                 </apply>
+                 <apply>
+                    <lt/>
+                    <ci>SL</ci>
+                    <ci>len_thick</ci>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre_per_millisecond">0</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dsovr_cle</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <times/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0.5</cn>
+                    </apply>
+                    <ci>dSL</ci>
+                 </apply>
+                 <apply>
+                    <gt/>
+                    <apply>
+                       <minus/>
+                       <apply>
+                          <times/>
+                          <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                          <ci>len_thin</ci>
+                       </apply>
+                       <ci>SL</ci>
+                    </apply>
+                    <ci>len_hbare</ci>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre_per_millisecond">0</cn>
+              </otherwise>
+           </piecewise>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dlen_sovr</ci>
+           <apply>
+              <minus/>
+              <ci>dsovr_ze</ci>
+              <ci>dsovr_cle</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dSOVFThin</ci>
+           <apply>
+              <divide/>
+              <ci>dlen_sovr</ci>
+              <ci>len_thin</ci>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dSOVFThick</ci>
+           <apply>
+              <divide/>
+              <apply>
+                 <times/>
+                 <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn>
+                 <ci>dlen_sovr</ci>
+              </apply>
+              <apply>
+                 <minus/>
+                 <ci>len_thick</ci>
+                 <ci>len_hbare</ci>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>TropTot</ci>
+           <apply>
+              <times/>
+              <ci>Trop_conc</ci>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                       <ci>SOVFThin</ci>
+                    </apply>
+                    <ci>TRPNCaL</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>SOVFThin</ci>
+                    <apply>
+                       <plus/>
+                       <apply>
+                          <times/>
+                          <ci>FrSBXB</ci>
+                          <ci>TRPNCaH</ci>
+                       </apply>
+                       <apply>
+                          <times/>
+                          <apply>
+                             <minus/>
+                             <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                             <ci>FrSBXB</ci>
+                          </apply>
+                          <ci>TRPNCaL</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dTropTot</ci>
+           <apply>
+              <times/>
+              <ci>Trop_conc</ci>
+              <apply>
+                 <plus/>
+                 <apply>
+                    <times/>
+                    <apply>
+                       <minus/>
+                       <ci>dSOVFThin</ci>
+                    </apply>
+                    <ci>TRPNCaL</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                       <ci>SOVFThin</ci>
+                    </apply>
+                    <ci>dTRPNCaL</ci>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>dSOVFThin</ci>
+                    <apply>
+                       <plus/>
+                       <apply>
+                          <times/>
+                          <ci>FrSBXB</ci>
+                          <ci>TRPNCaH</ci>
+                       </apply>
+                       <apply>
+                          <times/>
+                          <apply>
+                             <minus/>
+                             <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                             <ci>FrSBXB</ci>
+                          </apply>
+                          <ci>TRPNCaL</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+                 <apply>
+                    <times/>
+                    <ci>SOVFThin</ci>
+                    <apply>
+                       <minus/>
+                       <apply>
+                          <plus/>
+                          <apply>
+                             <times/>
+                             <ci>dFrSBXB</ci>
+                             <ci>TRPNCaH</ci>
+                          </apply>
+                          <apply>
+                             <times/>
+                             <ci>FrSBXB</ci>
+                             <ci>dTRPNCaH</ci>
+                          </apply>
+                          <apply>
+                             <times/>
+                             <apply>
+                                <minus/>
+                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                                <ci>FrSBXB</ci>
+                             </apply>
+                             <ci>dTRPNCaL</ci>
+                          </apply>
+                       </apply>
+                       <apply>
+                          <times/>
+                          <ci>dFrSBXB</ci>
+                          <ci>TRPNCaL</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>dforce</ci>
+           <apply>
+              <plus/>
+              <apply>
+                 <times/>
+                 <ci>kxb</ci>
+                 <ci>dSOVFThick</ci>
+                 <apply>
+                    <plus/>
+                    <apply>
+                       <times/>
+                       <ci>xXBpostr</ci>
+                       <ci>XBpostr</ci>
+                    </apply>
+                    <apply>
+                       <times/>
+                       <ci>xXBprer</ci>
+                       <ci>XBprer</ci>
+                    </apply>
+                 </apply>
+              </apply>
+              <apply>
+                 <times/>
+                 <ci>kxb</ci>
+                 <ci>SOVFThick</ci>
+                 <apply>
+                    <plus/>
+                    <apply>
+                       <times/>
+                       <ci>dxXBpostr</ci>
+                       <ci>XBpostr</ci>
+                    </apply>
+                    <apply>
+                       <times/>
+                       <ci>xXBpostr</ci>
+                       <ci>dXBpostr</ci>
+                    </apply>
+                    <apply>
+                       <times/>
+                       <ci>dxXBprer</ci>
+                       <ci>XBprer</ci>
+                    </apply>
+                    <apply>
+                       <times/>
+                       <ci>xXBprer</ci>
+                       <ci>dXBprer</ci>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+     </math>
+  </component>
+  <component name="equation_for_simulated_calcium_transient">
+     <variable name="Cai" public_interface="out" units="micromolar"/>
+     <variable name="beta" units="dimensionless"/>
+     <variable initial_value="20" name="tau1" units="millisecond"/>
+     <variable initial_value="110" name="tau2" units="millisecond"/>
+     <variable initial_value="5" name="start_time" units="millisecond"/>
+     <variable initial_value="1.45" name="Ca_amplitude" units="micromolar"/>
+     <variable initial_value="0.09" name="Ca_diastolic" units="micromolar"/>
+     <variable name="time" public_interface="in" units="millisecond"/>
+     <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply>
+           <eq/>
+           <ci>beta</ci>
+           <apply>
+              <minus/>
+              <apply>
+                 <power/>
+                 <apply>
+                    <divide/>
+                    <ci>tau1</ci>
+                    <ci>tau2</ci>
+                 </apply>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    </apply>
+                    <apply>
+                       <minus/>
+                       <apply>
+                          <divide/>
+                          <ci>tau1</ci>
+                          <ci>tau2</ci>
+                       </apply>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    </apply>
+                 </apply>
+              </apply>
+              <apply>
+                 <power/>
+                 <apply>
+                    <divide/>
+                    <ci>tau1</ci>
+                    <ci>tau2</ci>
+                 </apply>
+                 <apply>
+                    <divide/>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                    </apply>
+                    <apply>
+                       <minus/>
+                       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn>
+                       <apply>
+                          <divide/>
+                          <ci>tau2</ci>
+                          <ci>tau1</ci>
+                       </apply>
+                    </apply>
+                 </apply>
+              </apply>
+           </apply>
+        </apply>
+        <apply>
+           <eq/>
+           <ci>Cai</ci>
+           <piecewise>
+              <piece>
+                 <apply>
+                    <plus/>
+                    <apply>
+                       <times/>
+                       <apply>
+                          <divide/>
+                          <apply>
+                             <minus/>
+                             <ci>Ca_amplitude</ci>
+                             <ci>Ca_diastolic</ci>
+                          </apply>
+                          <ci>beta</ci>
+                       </apply>
+                       <apply>
+                          <minus/>
+                          <apply>
+                             <exp/>
+                             <apply>
+                                <divide/>
+                                <apply>
+                                   <minus/>
+                                   <apply>
+                                      <minus/>
+                                      <ci>time</ci>
+                                      <ci>start_time</ci>
+                                   </apply>
+                                </apply>
+                                <ci>tau1</ci>
+                             </apply>
+                          </apply>
+                          <apply>
+                             <exp/>
+                             <apply>
+                                <divide/>
+                                <apply>
+                                   <minus/>
+                                   <apply>
+                                      <minus/>
+                                      <ci>time</ci>
+                                      <ci>start_time</ci>
+                                   </apply>
+                                </apply>
+                                <ci>tau2</ci>
+                             </apply>
+                          </apply>
+                       </apply>
+                    </apply>
+                    <ci>Ca_diastolic</ci>
+                 </apply>
+                 <apply>
+                    <gt/>
+                    <ci>time</ci>
+                    <ci>start_time</ci>
+                 </apply>
+              </piece>
+              <otherwise>
+                 <ci>Ca_diastolic</ci>
+              </otherwise>
+           </piecewise>
+        </apply>
+     </math>
+  </component>
+  <component name="model_parameters">
+     <variable initial_value="1.2" name="len_thin" public_interface="out" units="micrometre"/>
+     <variable initial_value="1.65" name="len_thick" public_interface="out" units="micrometre"/>
+     <variable initial_value="0.1" name="len_hbare" public_interface="out" units="micrometre"/>
+     <variable initial_value="24" name="TmpC" public_interface="out" units="celsius"/>
+     <variable initial_value="0.007" name="x_0" public_interface="out" units="micrometre"/>
+  </component>
+  <connection>
+     <map_components component_1="Ca_binding_to_troponin_to_thin_filament_regulation" component_2="environment"/>
+     <map_variables variable_1="time" variable_2="time"/>
+  </connection>
+  <connection>
+     <map_components component_1="regulation_and_crossbridge_cycling_state_equations" component_2="environment"/>
+     <map_variables variable_1="time" variable_2="time"/>
+  </connection>
+  <connection>
+     <map_components component_1="mean_strain_of_strongly_bound_states" component_2="environment"/>
+     <map_variables variable_1="time" variable_2="time"/>
+  </connection>
+  <connection>
+     <map_components component_1="normalised_active_and_passive_force" component_2="environment"/>
+     <map_variables variable_1="time" variable_2="time"/>
+  </connection>
+  <connection>
+     <map_components component_1="equation_for_simulated_calcium_transient" component_2="environment"/>
+     <map_variables variable_1="time" variable_2="time"/>
+  </connection>
+  <connection>
+     <map_components component_1="sarcomere_geometry" component_2="normalised_active_and_passive_force"/>
+     <map_variables variable_1="SLmax" variable_2="SLmax"/>
+     <map_variables variable_1="SLmin" variable_2="SLmin"/>
+     <map_variables variable_1="SL" variable_2="SL"/>
+     <map_variables variable_1="SOVFThick" variable_2="SOVFThick"/>
+  </connection>
+  <connection>
+     <map_components component_1="sarcomere_geometry" component_2="model_parameters"/>
+     <map_variables variable_1="len_thin" variable_2="len_thin"/>
+     <map_variables variable_1="len_thick" variable_2="len_thick"/>
+     <map_variables variable_1="len_hbare" variable_2="len_hbare"/>
+  </connection>
+  <connection>
+     <map_components component_1="Ca_binding_to_troponin_to_thin_filament_regulation" component_2="model_parameters"/>
+     <map_variables variable_1="TmpC" variable_2="TmpC"/>
+  </connection>
+  <connection>
+     <map_components component_1="Ca_binding_to_troponin_to_thin_filament_regulation" component_2="equation_for_simulated_calcium_transient"/>
+     <map_variables variable_1="Cai" variable_2="Cai"/>
+  </connection>
+  <connection>
+     <map_components component_1="Ca_binding_to_troponin_to_thin_filament_regulation" component_2="sarcomere_geometry"/>
+     <map_variables variable_1="SOVFThin" variable_2="SOVFThin"/>
+  </connection>
+  <connection>
+     <map_components component_1="thin_filament_regulation_and_crossbridge_cycling_rates" component_2="model_parameters"/>
+     <map_variables variable_1="x_0" variable_2="x_0"/>
+     <map_variables variable_1="TmpC" variable_2="TmpC"/>
+  </connection>
+  <connection>
+     <map_components component_1="thin_filament_regulation_and_crossbridge_cycling_rates" component_2="sarcomere_geometry"/>
+     <map_variables variable_1="SOVFThick" variable_2="SOVFThick"/>
+  </connection>
+  <connection>
+     <map_components component_1="thin_filament_regulation_and_crossbridge_cycling_rates" component_2="mean_strain_of_strongly_bound_states"/>
+     <map_variables variable_1="xXBpostr" variable_2="xXBpostr"/>
+     <map_variables variable_1="xXBprer" variable_2="xXBprer"/>
+     <map_variables variable_1="fappT" variable_2="fappT"/>
+     <map_variables variable_1="gappT" variable_2="gappT"/>
+     <map_variables variable_1="hfT" variable_2="hfT"/>
+     <map_variables variable_1="hbT" variable_2="hbT"/>
+     <map_variables variable_1="gxbT" variable_2="gxbT"/>
+  </connection>
+  <connection>
+     <map_components component_1="regulation_and_crossbridge_cycling_state_equations" component_2="thin_filament_regulation_and_crossbridge_cycling_rates"/>
+     <map_variables variable_1="fappT" variable_2="fappT"/>
+     <map_variables variable_1="gappT" variable_2="gappT"/>
+     <map_variables variable_1="hfT" variable_2="hfT"/>
+     <map_variables variable_1="hbT" variable_2="hbT"/>
+     <map_variables variable_1="gxbT" variable_2="gxbT"/>
+  </connection>
+  <connection>
+     <map_components component_1="regulation_and_crossbridge_cycling_state_equations" component_2="Ca_binding_to_troponin_to_thin_filament_regulation"/>
+     <map_variables variable_1="kn_pT" variable_2="kn_pT"/>
+     <map_variables variable_1="kp_nT" variable_2="kp_nT"/>
+  </connection>
+  <connection>
+     <map_components component_1="mean_strain_of_strongly_bound_states" component_2="model_parameters"/>
+     <map_variables variable_1="x_0" variable_2="x_0"/>
+  </connection>
+  <connection>
+     <map_components component_1="normalised_active_and_passive_force" component_2="thin_filament_regulation_and_crossbridge_cycling_rates"/>
+     <map_variables variable_1="fapp" variable_2="fapp"/>
+     <map_variables variable_1="gapp" variable_2="gapp"/>
+     <map_variables variable_1="hf" variable_2="hf"/>
+     <map_variables variable_1="hb" variable_2="hb"/>
+     <map_variables variable_1="gxb" variable_2="gxb"/>
+     <map_variables variable_1="fappT" variable_2="fappT"/>
+     <map_variables variable_1="gappT" variable_2="gappT"/>
+     <map_variables variable_1="hfT" variable_2="hfT"/>
+     <map_variables variable_1="hbT" variable_2="hbT"/>
+     <map_variables variable_1="gxbT" variable_2="gxbT"/>
+  </connection>
+  <connection>
+     <map_components component_1="normalised_active_and_passive_force" component_2="regulation_and_crossbridge_cycling_state_equations"/>
+     <map_variables variable_1="XBpostr" variable_2="XBpostr"/>
+     <map_variables variable_1="XBprer" variable_2="XBprer"/>
+  </connection>
+  <connection>
+     <map_components component_1="normalised_active_and_passive_force" component_2="mean_strain_of_strongly_bound_states"/>
+     <map_variables variable_1="xXBpostr" variable_2="xXBpostr"/>
+     <map_variables variable_1="xXBprer" variable_2="xXBprer"/>
+     <map_variables variable_1="dSL" variable_2="dSL"/>
+  </connection>
+  <connection>
+     <map_components component_1="normalised_active_and_passive_force" component_2="model_parameters"/>
+     <map_variables variable_1="x_0" variable_2="x_0"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="model_parameters"/>
+     <map_variables variable_1="len_thin" variable_2="len_thin"/>
+     <map_variables variable_1="len_thick" variable_2="len_thick"/>
+     <map_variables variable_1="len_hbare" variable_2="len_hbare"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="Ca_binding_to_troponin_to_thin_filament_regulation"/>
+     <map_variables variable_1="TRPNCaL" variable_2="TRPNCaL"/>
+     <map_variables variable_1="TRPNCaH" variable_2="TRPNCaH"/>
+     <map_variables variable_1="dTRPNCaL" variable_2="dTRPNCaL"/>
+     <map_variables variable_1="dTRPNCaH" variable_2="dTRPNCaH"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="regulation_and_crossbridge_cycling_state_equations"/>
+     <map_variables variable_1="XBpostr" variable_2="XBpostr"/>
+     <map_variables variable_1="XBprer" variable_2="XBprer"/>
+     <map_variables variable_1="dXBpostr" variable_2="dXBpostr"/>
+     <map_variables variable_1="dXBprer" variable_2="dXBprer"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="mean_strain_of_strongly_bound_states"/>
+     <map_variables variable_1="xXBpostr" variable_2="xXBpostr"/>
+     <map_variables variable_1="xXBprer" variable_2="xXBprer"/>
+     <map_variables variable_1="dxXBpostr" variable_2="dxXBpostr"/>
+     <map_variables variable_1="dxXBprer" variable_2="dxXBprer"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="normalised_active_and_passive_force"/>
+     <map_variables variable_1="SSXBpostr" variable_2="SSXBpostr"/>
+     <map_variables variable_1="SSXBprer" variable_2="SSXBprer"/>
+     <map_variables variable_1="SL" variable_2="SL"/>
+     <map_variables variable_1="dSL" variable_2="dSL"/>
+  </connection>
+  <connection>
+     <map_components component_1="calculation_of_micromolar_per_millisecondes_of_Ca_for_apparent_Ca_binding" component_2="sarcomere_geometry"/>
+     <map_variables variable_1="SOVFThin" variable_2="SOVFThin"/>
+     <map_variables variable_1="SOVFThick" variable_2="SOVFThick"/>
+  </connection>
+
+
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="rdf:#23eca2fe-67df-455d-9928-dc725453dd3a"><issued xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#c0cffe55-41e5-4066-aead-f50e43889a47"/></issued><Journal xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#86312814-2119-4829-99da-a8da8999ee75"/></Journal><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#85b647c1-204c-4e73-8c96-66e9a75f0a4e"/></creator><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">Approximate model of cooperative activation and crossbridge cycling in cardiac muscle using ordinary differential equations</title></rdf:Description><rdf:Description rdf:nodeID="n1"><rdf:rest><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/></rdf:rest><rdf:first><rdf:Description rdf:nodeID="n2"/></rdf:first></rdf:Description><rdf:Description rdf:about="rdf:#dc8280d3-e32d-4f22-8c4a-6c6e9b07b540"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Fei</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Wang</Family></rdf:Description><rdf:Description rdf:about="rdf:#86312814-2119-4829-99da-a8da8999ee75"><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">Biophysical Journal</title></rdf:Description><rdf:Description rdf:about=""><cmeta:modification><rdf:Description rdf:about="rdf:#98a3adb9-69a9-4c85-b2e0-bf1550f7f8eb"/></cmeta:modification><publisher xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">The University of Auckland, Bioengineering Institute</publisher><created xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#0c52abbb-0dd7-4d07-85d0-35b8b0a471e0"/></created><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#c8c1e509-4249-4661-a0e5-aa21a8a787ef"/></creator><cmeta:comment><rdf:Description rdf:about="rdf:#5bfe7087-9a4d-4750-bf59-1c1faf9f1a53"/></cmeta:comment></rdf:Description><rdf:Description rdf:about="rdf:#5bfe7087-9a4d-4750-bf59-1c1faf9f1a53"><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#564b90c9-5c5f-46a2-864c-c46ae3f1125e"/></creator><rdf:value xml:lang="en">This CellML model is known to run in both PCEnv and COR.  The units have been checked and they are consistent.  The CellML model was created using a combination of both the published paper and also the author's Matlab code.</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#564b90c9-5c5f-46a2-864c-c46ae3f1125e"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine Lloyd</FN></rdf:Description><rdf:Description rdf:about="rdf:#101d8de9-435a-417d-bd17-33ef6b8bac1e"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#7e013cda-d96c-4fb2-b6ce-d65dc701e8a0"/></N></rdf:Description><rdf:Description rdf:nodeID="n3"><boundIntervals xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n1"/></boundIntervals></rdf:Description><rdf:Description rdf:about="rdf:#05c5b24e-1192-40e1-892d-d759bc6f9829"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Donald</Given><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">M</Other><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Bers</Family></rdf:Description><rdf:Description rdf:about="rdf:#79d66ae7-c8f5-4b02-b4fe-82359db9a6f9"><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#3aba7574-0317-4a3b-8dc8-77cfcdeaa960"/></creator><rdf:value xml:lang="en">This is the CellML description of Rice et al.'s 2008 model of cooperative activation and crossbridge cycling in cardiac muscle using ordinary differential equations.</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#6f4cf0fa-cd6c-4205-8de2-42c69d6ef208"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#05c5b24e-1192-40e1-892d-d759bc6f9829"/></N><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#c0cffe55-41e5-4066-aead-f50e43889a47"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-00-00 00:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#7e013cda-d96c-4fb2-b6ce-d65dc701e8a0"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Steve</Given><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en"></Other><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Niederer</Family></rdf:Description><rdf:Description rdf:about="rdf:#0c52abbb-0dd7-4d07-85d0-35b8b0a471e0"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-07-08T00:00:00+00:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#98a3adb9-69a9-4c85-b2e0-bf1550f7f8eb"><cmeta:modifier><rdf:Description rdf:about="rdf:#101d8de9-435a-417d-bd17-33ef6b8bac1e"/></cmeta:modifier><modified xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#6de1fd88-e4a8-4cdb-a0b5-e9ee4bfeacd6"/></modified><rdf:value xml:lang="en">This second version of the CellML model has been modified by Steve Niederer.  The CellML model was compared with Jeremy Rice's original Matlab code taken from his web page.  Changes to the CellML model include:  body temperature in the Rice Matlab code is acurate to 3sf ie body temp is 310 not 310.15.  Also in the Rice Matlab code derivative 12 the force integral is fixed to be zero.  
+
+To fix the CellML model Steve introduced: 
+    
+SEon = 1.0;
+To cellml model and change afterload definition to:
+if (SEon == 1)
+afterload = KSE*(SLset-Y(5));
+else
+afterload = 0.0;
+end;
+
+and changed xbmodsp = 4/3 (which is the mouse specific modification for XB cycling rates)
+to xbmodsp = 1 (to represent the rat model and not the mouse)
+
+Steve also reset all of the initial conditions after solving the model a coupl of times for 1000ms.</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#1c1976a7-81c1-4e58-a64d-c7698ec279ca"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#4d56332d-c3cc-4a4e-ad86-0b36348c8dfd"/></N><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#85b647c1-204c-4e73-8c96-66e9a75f0a4e"><rdf:_2><rdf:Description rdf:about="rdf:#5e0e2043-b904-46df-874d-910e7b9fe612"/></rdf:_2><rdf:_3><rdf:Description rdf:about="rdf:#6f4cf0fa-cd6c-4205-8de2-42c69d6ef208"/></rdf:_3><rdf:_4><rdf:Description rdf:about="rdf:#48fc8066-42bb-45d4-b42c-f48bc108a265"/></rdf:_4><rdf:_1><rdf:Description rdf:about="rdf:#1c1976a7-81c1-4e58-a64d-c7698ec279ca"/></rdf:_1><rdf:type><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#6a666545-2193-4623-b2aa-d35ce0c9f4d5"><subject xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#a8a75408-610d-48a5-a438-9e813e7069e1"/></subject></rdf:Description><rdf:Description rdf:about="rdf:#c8c1e509-4249-4661-a0e5-aa21a8a787ef"><ORG xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#7d0ba5f6-c434-4c49-8415-5b7bf2ca8c56"/></ORG><EMAIL xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#b41fb804-38ac-47d5-aa03-04822f99b443"/></EMAIL><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#97a05057-0fa1-45d1-9d8b-768a9e04a066"/></N></rdf:Description><rdf:Description rdf:about="#rice_model_2008"><simulation xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n3"/></simulation><reference xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#35c71ca0-7496-45e8-8f0e-ba359ebbfc05"/></reference><reference xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#6a666545-2193-4623-b2aa-d35ce0c9f4d5"/></reference><cmeta:comment><rdf:Description rdf:about="rdf:#79d66ae7-c8f5-4b02-b4fe-82359db9a6f9"/></cmeta:comment><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">
+       Rice et al.'s 2008 model of cooperative activation and crossbridge cycling in cardiac muscle using ordinary differential equations.
+     </title></rdf:Description><rdf:Description rdf:about="rdf:#a8a75408-610d-48a5-a438-9e813e7069e1"><rdf:value><rdf:Description rdf:about="rdf:#566d983b-56b3-42f6-a590-f7d68d809dc0"/></rdf:value><subject_type xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">keyword</subject_type></rdf:Description><rdf:Description rdf:nodeID="n2"><endingValue xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">500</endingValue></rdf:Description><rdf:Description rdf:about="rdf:#566d983b-56b3-42f6-a590-f7d68d809dc0"><rdf:_9 xml:lang="en">troponin</rdf:_9><rdf:_7 xml:lang="en">myosin</rdf:_7><rdf:_10 xml:lang="en">tropomyosin</rdf:_10><rdf:_8 xml:lang="en">calcium</rdf:_8><rdf:_11 xml:lang="en">cooperativity</rdf:_11><rdf:_6 xml:lang="en">actin</rdf:_6><rdf:_5 xml:lang="en">myofilament</rdf:_5><rdf:_2 xml:lang="en">crossbridge</rdf:_2><rdf:_3 xml:lang="en">heart</rdf:_3><rdf:_4 xml:lang="en">muscle</rdf:_4><rdf:_1 xml:lang="en">cardiac</rdf:_1><rdf:type><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#7d0ba5f6-c434-4c49-8415-5b7bf2ca8c56"><Orgname xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">The University of Auckland</Orgname><Orgunit xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">The Bioengineering Institute</Orgunit></rdf:Description><rdf:Description rdf:about="rdf:#48fc8066-42bb-45d4-b42c-f48bc108a265"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#c73c8615-7cb4-4927-8ca3-36a52b7d5b63"/></N><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#c73c8615-7cb4-4927-8ca3-36a52b7d5b63"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Pieter</Given><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">P</Other><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">de Tombe</Family></rdf:Description><rdf:Description rdf:about="rdf:#4d56332d-c3cc-4a4e-ad86-0b36348c8dfd"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Jeremy</Other><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Rice</Family></rdf:Description><rdf:Description rdf:about="rdf:#5e0e2043-b904-46df-874d-910e7b9fe612"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#dc8280d3-e32d-4f22-8c4a-6c6e9b07b540"/></N><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type></rdf:Description><rdf:Description rdf:about="rdf:#3aba7574-0317-4a3b-8dc8-77cfcdeaa960"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine Lloyd</FN></rdf:Description><rdf:Description rdf:about="rdf:#35c71ca0-7496-45e8-8f0e-ba359ebbfc05"><Pubmed_id xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">18234826</Pubmed_id><JournalArticle xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#23eca2fe-67df-455d-9928-dc725453dd3a"/></JournalArticle></rdf:Description><rdf:Description rdf:about="rdf:#97a05057-0fa1-45d1-9d8b-768a9e04a066"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine</Given><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">May</Other><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Lloyd</Family></rdf:Description><rdf:Description rdf:about="rdf:#6de1fd88-e4a8-4cdb-a0b5-e9ee4bfeacd6"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2009-02-13T12:18:02+13:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#b41fb804-38ac-47d5-aa03-04822f99b443"><rdf:value xml:lang="en">c.lloyd@auckland.ac.nz</rdf:value><rdf:type><rdf:Description rdf:about="http://imc.org/vCard/3.0#internet"/></rdf:type></rdf:Description></rdf:RDF></model>
