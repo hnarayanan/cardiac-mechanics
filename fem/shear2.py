@@ -2,9 +2,16 @@
 
 # Library imports and settings
 from dolfin import *
-import ufl; ufl.algorithms.preprocess.enable_profiling = True
 from numpy import array, arange
-parameters["form_compiler"]["name"] = "sfc"
+
+parameters["form_compiler"]["cpp_optimize"] = True
+ffc_options = {
+    "quadrature_degree": 5,
+    "eliminate_zeros": True,
+    "precompute_basis_const": True,
+    "precompute_ip_const": True
+    # "optimize": True
+}
 
 # Material parameters for Figure 7 in HolzapfelOgden2009
 a    =  Constant(0.500)   #kPa
@@ -93,6 +100,10 @@ def S_vol_inf(u):
     S_vol_inf = J*diff(psi_vol, J)*inv(C)
     return(S_vol_inf)
 
+# Total second Piola-Kirchhoff stress
+def S_n(u):
+    return S_vol_inf(u) + S_iso_inf(u)
+
 # Cauchy stress
 def sigma(u):
     [I, F, C, J, C_bar, I1_bar, I2_bar, \
@@ -103,7 +114,7 @@ def sigma(u):
 width = 1
 depth = 1
 height = 1
-n = 10
+n = 5
 mesh = Box(0, width, 0, depth, 0, height, n*width, n*depth, n*height)
 
 # Function spaces
@@ -117,7 +128,6 @@ v  = TestFunction(vector)             # Test function
 u  = Function(vector)                 # Displacement from previous iteration
 S_iso_inf_p = Function(tensor)
 S_vol_inf_p = Function(tensor)
-Q_p = Function(tensor)
 
 # Boundary conditions
 back_condition   = "x[0] == 0.0 && on_boundary"
@@ -139,15 +149,6 @@ hold_back = DirichletBC(vector, hold, back)
 shear_front = DirichletBC(vector, shear, front)
 bcs = [hold_back, shear_front]
 
-# Create files to store output
-u_store = TimeSeries("../output/shear/u")
-S_vol_inf_store = TimeSeries("../output/shear/S_vol_inf")
-S_iso_inf_store = TimeSeries("../output/shear/S_iso_inf")
-
-# And store initial values
-u_store.store(u.vector(), 0.0)
-S_iso_inf_store.store(S_iso_inf_p.vector(), 0.0)
-S_vol_inf_store.store(S_vol_inf_p.vector(), 0.0)
 
 # Define the time range
 times = arange(dt, T + dt, dt)
@@ -155,36 +156,17 @@ times = arange(dt, T + dt, dt)
 # Subject the body to a known strain protocol and record the stresses
 for t_n in times:
 
-    # Load previous elastic stress states
-    t_p = t_n - dt
-    S_vol_inf_store.retrieve(S_vol_inf_p.vector(), t_p)
-    S_iso_inf_store.retrieve(S_iso_inf_p.vector(), t_p)
-
     # Compute current shear strain and update the boundary condition
     gamma_n = gamma_max*sin(2*t_n/T*float(pi))
     shear.gamma = gamma_n
 
-    # Update stress state
-    S_vol_inf_n = S_vol_inf(u)
-    S_iso_inf_n = S_iso_inf(u)
-    S_n = S_vol_inf_n + S_iso_inf_n
-
     # Define the variational form for the problem
-    F = inner((Identity(u.cell().d) + grad(u))*S_n, grad(v))*dx
+    F = inner((Identity(u.cell().d) + grad(u))*S_n(u), grad(v))*dx
     J = derivative(F, u, du)
 
     # Solve the boundary value problem
-    solve(F == 0, u, bcs, J=J)
+    solve(F == 0, u, bcs, J=J, form_compiler_parameters=ffc_options)
 
-    # Project the stress states to the tensor function space
-    S_iso_inf_n = project(S_iso_inf(u), tensor)
-    S_vol_inf_n = project(S_vol_inf(u), tensor)
-    Q_n = project(Q_n, tensor)
-
-    # Store the displacement and stress state at current time
-    u_store.store(u.vector(), t_n)
-    S_iso_inf_store.store(S_iso_inf_n.vector(), t_n)
-    S_vol_inf_store.store(S_vol_inf_n.vector(), t_n)
-
-    # Convert to Cauchy stress for comparison with Dokos et al.
-#    S_n = F.subs({gamma:gamma_n})*S_n*F.T.subs({gamma:gamma_n})
+#    stress = project(S_n(u)[0][1], scalar) #fs
+#    center = (depth/2.0, width/2.0, height/2.0)
+#    print "stress-strain:", gamma_n, stress(center)
