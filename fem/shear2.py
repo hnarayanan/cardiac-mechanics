@@ -4,7 +4,7 @@
 from dolfin import *
 from numpy import array, arange
 
-parameters["form_compiler"]["cpp_optimize"] = True
+parameters["form_compiler"]["name"] = 'sfc'
 ffc_options = {
     "quadrature_degree": 5,
     "eliminate_zeros": True,
@@ -14,13 +14,13 @@ ffc_options = {
 }
 
 # Material parameters for Figure 7 in HolzapfelOgden2009
-a    =  Constant(0.500)   #kPa
+a    =  Constant(0.059)   #kPa
 b    =  Constant(8.023)
-a_f  =  Constant(16.472)  #kPa
+a_f  =  Constant(18.472)  #kPa
 b_f  =  Constant(16.026)
 a_s  =  Constant(2.481)   #kPa
 b_s  =  Constant(11.120)
-a_fs =  Constant(0.356)   #kPa
+a_fs =  Constant(0.216)   #kPa
 b_fs =  Constant(11.436)
 
 # Material parameters for compressibility
@@ -28,8 +28,8 @@ kappa = Constant(2.0e3)   #kPa
 beta  = Constant(9.0)
 
 # Parameters related to time-stepping
-T = 10.0
-dt = T/100
+T = 1.0
+dt = T/10
 gamma_max = 0.5
 
 # Strain energy functions for the passive myocardium
@@ -70,17 +70,19 @@ def kinematics(u):
     return [I, F, C, J, C_bar, I1_bar, I2_bar, \
             I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar]
 
-# Define the elastic response of the material
-# Isochoric part of the second Piola-Kirchhoff stress
-def S_iso_inf(u):
+# Define the elastic response of the material in terms of the second
+# Piola-Kirchhoff stress tensor
+def S(u):
     # Define useful kinematic measures
     [I, F, C, J, C_bar, I1_bar, I2_bar, \
      I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar] = kinematics(u)
 
     # Strain energy functions
-    psi_iso = psi_iso_inf(I1_bar, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar)
+    psi_iso = psi_iso_inf(I1_bar, I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar) # Isochoric part
+    psi_vol = psi_vol_inf(J)                                                # Volumetric part
 
-    # Define the second Piola-Kirchhoff stress in terms of the invariants
+    # Define the isochoric part of the second Piola-Kirchhoff stress
+    # in terms of the invariants
     S_bar =   2*(diff(psi_iso, I1_bar) + diff(psi_iso, I2_bar))*I \
             - 2*diff(psi_iso, I2_bar)*C_bar \
             + 2*diff(psi_iso, I4_f_bar)*outer(f0, f0) \
@@ -89,20 +91,14 @@ def S_iso_inf(u):
             + diff(psi_iso, I8_fn_bar)*(outer(f0, n0) + outer(n0, f0))
     Dev_S_bar = S_bar - (1.0/3.0)*inner(S_bar, C)*inv(C)
     S_iso_inf = J**(-2.0/3.0)*Dev_S_bar
-    return(S_iso_inf)
 
-# Volumetric part of the second Piola-Kirchhoff stress
-def S_vol_inf(u):
-    # Define useful kinematic measures
-    [I, F, C, J, C_bar, I1_bar, I2_bar, \
-     I4_f_bar, I4_s_bar, I8_fs_bar, I8_fn_bar] = kinematics(u)
-    psi_vol = psi_vol_inf(J)
+    # Define the volumetric part of the second Piola-Kirchhoff stress
+    # in terms of the Jacobian
     S_vol_inf = J*diff(psi_vol, J)*inv(C)
-    return(S_vol_inf)
 
-# Total second Piola-Kirchhoff stress
-def S_n(u):
-    return S_vol_inf(u) + S_iso_inf(u)
+    # Return the total second Piola-Kirchhoff stress
+    return(S_iso_inf + S_vol_inf)
+
 
 # Cauchy stress
 def sigma(u):
@@ -126,8 +122,6 @@ tensor = TensorFunctionSpace(mesh, "Lagrange", 1)
 du = TrialFunction(vector)            # Incremental displacement
 v  = TestFunction(vector)             # Test function
 u  = Function(vector)                 # Displacement from previous iteration
-S_iso_inf_p = Function(tensor)
-S_vol_inf_p = Function(tensor)
 
 # Boundary conditions
 back_condition   = "x[0] == 0.0 && on_boundary"
@@ -156,16 +150,18 @@ times = arange(dt, T + dt, dt)
 # Subject the body to a known strain protocol and record the stresses
 for t_n in times:
 
+    print "I was here at %g s" % t_n
+
     # Compute current shear strain and update the boundary condition
-    gamma_n = gamma_max*sin(2*t_n/T*float(pi))
+    gamma_n = gamma_max*t_n/T
     shear.gamma = gamma_n
 
     # Define the variational form for the problem
-    F = inner((Identity(u.cell().d) + grad(u))*S_n(u), grad(v))*dx
+    F = inner((Identity(u.cell().d) + grad(u))*S(u), grad(v))*dx
     J = derivative(F, u, du)
 
     # Solve the boundary value problem
-    solve(F == 0, u, bcs, J=J, form_compiler_parameters=ffc_options)
+    solve(F == 0, u, bcs, J=J)
 
 #    stress = project(S_n(u)[0][1], scalar) #fs
 #    center = (depth/2.0, width/2.0, height/2.0)
